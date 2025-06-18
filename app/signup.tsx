@@ -6,7 +6,8 @@ import { auth, db } from "../firebaseConfig"; // adapte le chemin selon ton proj
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import type { InferType } from "yup";
-
+// import { navigate } from "expo-router/build/global-state/routing";
+import  { router } from "expo-router";
 // Schéma de validation Yup
 const schema = yup.object({
   prenom: yup.string().required("Le prénom est obligatoire"),
@@ -50,8 +51,8 @@ export default function RegisterForm() {
         email: data.email,
         createdAt: Timestamp.fromDate(new Date()),
       });
-
       alert("Inscription réussie !");
+      router.replace('/login'); // Redirection vers la page de connexion
     } catch (error: unknown) {
       if (error instanceof Error) {
         alert("Erreur : " + error.message);
@@ -59,6 +60,7 @@ export default function RegisterForm() {
         alert("Une erreur inconnue est survenue");
       }
     }
+
   };
 
   return (

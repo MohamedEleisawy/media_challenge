@@ -1,10 +1,11 @@
-// Import des modules Firebase nécessaires
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
+// Configuration Firebase minimale sans AsyncStorage
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore'; // ← ajoute cette ligne
+// import { getReactNativePersistence, initializeAuth } from 'firebase/auth/react-native';
+import { getReactNativePersistence, initializeAuth } from "firebase/auth"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configuration Firebase (ne la publie pas en public)
+
 const firebaseConfig = {
   apiKey: "AIzaSyCEZoku3JPgmAQAvZLALFEEg2E4U099QLg",
   authDomain: "media-challenge-27fb4.firebaseapp.com",
@@ -15,10 +16,12 @@ const firebaseConfig = {
   measurementId: "G-GHJRH6XCC2"
 };
 
-// Initialisation de Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialisation des services que tu veux utiliser
-export const auth = getAuth(app); // Authentification
-export const db = getFirestore(app); // Firestore pour stocker les infos utilisateur
-// const analytics = getAnalytics(app); // Optionnel
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
+
+const db = getFirestore(app); // ← ajoute ceci
+
+export { auth, db }; // ← exporte bien les deux

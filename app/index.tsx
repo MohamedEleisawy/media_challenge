@@ -1,7 +1,6 @@
+// app/index.tsx
 import { View, Text, Button } from 'react-native';
 import { Link } from 'expo-router';
-// import { useAuth } from '../authContext';
-
 
 export default function Home() {
   return (
