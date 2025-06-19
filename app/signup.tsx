@@ -6,7 +6,7 @@ import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { Timestamp, setDoc, doc} from 'firebase/firestore';
 // import { authStyles } from './styles/auth.styles';
 
 
@@ -35,13 +35,13 @@ export default function Signup() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
-      await addDoc(collection(db, 'users'), {
-        uid: user.uid,
-        prenom: data.prenom,
-        nom: data.nom,
-        email: data.email,
-        createdAt: Timestamp.fromDate(new Date()),
-      });
+   await setDoc(doc(db, 'users', user.uid), {
+      uid: user.uid,
+      prenom: data.prenom,
+      nom: data.nom,
+      email: data.email,
+      createdAt: Timestamp.fromDate(new Date()),
+    });
 
       Toast.show('Inscription réussie !', {
         duration: Toast.durations.LONG,
