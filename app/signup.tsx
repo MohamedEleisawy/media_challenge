@@ -8,7 +8,7 @@ import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Timestamp, setDoc, doc} from 'firebase/firestore';
 // import { authStyles } from './styles/auth.styles';
-
+import { useRouter } from 'expo-router'; // <-- import useRouter for navigation
 
 const schema = yup.object({
   prenom: yup.string().required('Le prénom est obligatoire'),
@@ -22,6 +22,7 @@ const schema = yup.object({
 });
 
 export default function Signup() {
+  const router = useRouter(); // <-- ici
   const {
     control,
     handleSubmit,
@@ -47,6 +48,7 @@ export default function Signup() {
         duration: Toast.durations.LONG,
         position: Toast.positions.BOTTOM,
       });
+            router.replace('/'); // ✅ Redirection vers la page d'accueil (index.tsx)
     } catch (error: any) {
       Toast.show(`Erreur : ${error.message}`, {
         duration: Toast.durations.LONG,
