@@ -12,15 +12,14 @@ export default function Navbar() {
         <Text style={styles.link}>Accueil</Text>
       </Link>
       {user ? (
-        <View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           <Link href="/profil" asChild>
             <Text style={styles.link}>Profil</Text>
           </Link>
           {/* <Button title="Déconnexion" onPress={logout} /> */}
         </View>
-        
       ) : (
-        <View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           <Link href="/login" asChild>
             <Text style={styles.link}>Connexion</Text>
           </Link>
@@ -40,6 +39,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     backgroundColor: '#ddd',
+    marginTop: 40, // Pour éviter le chevauchement avec le status bar
   },
   link: {
     fontSize: 16,

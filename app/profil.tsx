@@ -4,15 +4,19 @@ import { useAuth } from '../authContext';
 export default function ProfilScreen() { // Renommé pour éviter les conflits
   const { user } = useAuth();
 
-  if (!user) {
-    return <Text>Chargement...</Text>;
-  }
+if (!user) {
+  return (
+    <View style={styles.container}>
+      <Text>Chargement ou non connecté</Text>
+    </View>
+  );
+}
+
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mon Profil</Text>
-      <Text>Prénom : {user.displayName || 'Non défini'}</Text>
-      <Text>Email : {user.email}</Text>
+
     </View>
   );
 }
