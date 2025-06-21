@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:25949980327:android:980ec78329127ea234bd82",
+        "mobilesdk_app_id": "1:25949980327:android:eb3428509b573ea834bd82",
         "android_client_info": {
-          "package_name": "com.contrepoint.android"
+          "package_name": "com.anonymous.voixinterneapp"
         }
       },
       "oauth_client": [

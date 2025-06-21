@@ -97,7 +97,7 @@ android {
     namespace 'com.anonymous.voixinterneapp'
     defaultConfig {
         // applicationId 'com.anonymous.voixinterneapp'
-        applicationId "com.contrepoint.android"
+        applicationId 'com.anonymous.voixinterneapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

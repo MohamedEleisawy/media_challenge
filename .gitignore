@@ -19,6 +19,7 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+.
 
 # 👉 macOS
 .DS_Store
@@ -35,6 +36,8 @@ firebase-debug.*.log*
 
 # 👉 Firebase
 .firebase/
+google-services.json
+android/app/google-services.json
 
 # 👉 Env Files
 .env

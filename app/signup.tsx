@@ -14,6 +14,7 @@ const schema = yup.object({
   prenom: yup.string().required('Le prénom est obligatoire'),
   nom: yup.string().required('Le nom est obligatoire'),
   email: yup.string().email('Email invalide').required('Email est obligatoire'),
+  pseudo: yup.string().required('Le pseudo est obligatoire'),
   password: yup.string().min(6, 'Minimum 6 caractères').required('Mot de passe obligatoire'),
   confirmPassword: yup
     .string()
@@ -40,6 +41,7 @@ export default function Signup() {
       uid: user.uid,
       prenom: data.prenom,
       nom: data.nom,
+      pseudo: data.pseudo,
       email: data.email,
       createdAt: Timestamp.fromDate(new Date()),
     });
@@ -61,7 +63,7 @@ export default function Signup() {
     <ScrollView >
       <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>Créer un compte</Text>
 
-      {['prenom', 'nom', 'email', 'password', 'confirmPassword'].map((field, index) => (
+      {['prenom', 'nom','pseudo','email', 'password', 'confirmPassword'].map((field, index) => (
         <View key={index}>
           <Controller
             control={control}
