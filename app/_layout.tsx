@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import SplashScreen from '../components/SplashScreen';
 import Navbar from '../components/Navbar';
+import Toast from 'react-native-toast-message';
 
 export default function Layout() {
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,7 @@ export default function Layout() {
       <View style={{ flex: 1 }}>
         <Navbar />
         <Slot />
+        <Toast /> {/* Ajout ici du composant global Toast */}
       </View>
     </AuthProvider>
   );
