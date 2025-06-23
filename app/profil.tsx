@@ -5,9 +5,11 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Button, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Toast from 'react-native-root-toast';
 import { useAuth } from '../authContext';
+import { useFonts } from 'expo-font';
 import { auth, db } from '../firebaseConfig';
 
 export default function ProfileScreen() {
+
   const { user } = useAuth();
   const [userData, setUserData] = useState({
     createdAt: '',
@@ -20,7 +22,10 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
+  const [fontsLoaded] = useFonts({
+    'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
+    'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
+  });
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
@@ -31,7 +36,6 @@ export default function ProfileScreen() {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          // Convert Firestore Timestamp to a readable date string
           const createdAtDate = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown date';
           setUserData({
             ...data,
@@ -76,10 +80,11 @@ export default function ProfileScreen() {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color="#00235B" />
-        <Text>Chargement...</Text>
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
+  if (!fontsLoaded) return null; 
 
   return (
     <View style={styles.container}>
@@ -89,7 +94,6 @@ export default function ProfileScreen() {
       />
       <Text style={styles.pseudo}>{userData.pseudo}</Text>
       <Text style={styles.infoText}>Date de création: {userData.createdAt}</Text>
-      {/* <Text style={styles.infoText}>Email: {userData.email}</Text> */}
 
       <View style={styles.anecdotesTitleContainer}>
         <Text style={styles.anecdotesTitleBlue}>Mes </Text>
@@ -97,14 +101,13 @@ export default function ProfileScreen() {
           <Text style={styles.anecdotesTitleWhite}>anecdotes</Text>
         </View>
       </View>
-      
+
       <View style={styles.anecdotesTitleContainer}>
         <Text style={styles.anecdotesTitleBlue}>Mes </Text>
         <View style={styles.anecdotesTitleYellow}>
           <Text style={styles.anecdotesTitleWhite}>statistiques</Text>
         </View>
       </View>
-
 
       <View style={styles.preferencesContainer}>
         <Text style={styles.preferencesTitle}>Mes préférences</Text>
@@ -120,7 +123,7 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.preferenceButton}>
           <Text style={styles.preferenceButtonText}>Notifications</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.preferenceButton} onPress={() => router.push('/editProfil')} >
+        <TouchableOpacity style={styles.preferenceButton} onPress={() => router.push('/editProfil')}>
           <Text style={styles.preferenceButtonText}>Modifier le compte</Text>
         </TouchableOpacity>
       </View>
@@ -133,7 +136,6 @@ export default function ProfileScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -150,24 +152,14 @@ const styles = StyleSheet.create({
     borderColor: '#00235B',
   },
   pseudo: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 7,
     color: '#00235B',
   },
-  infoContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 10,
-    width: '100%',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
   infoText: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     fontSize: 16,
     marginBottom: 10,
     color: '#00235B',
@@ -177,11 +169,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontSize: 16,
+    color: '#00235B',
+  },
   preferencesContainer: {
     width: '100%',
     marginBottom: 20,
   },
   preferencesTitle: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -196,6 +194,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   preferenceButtonText: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     color: '#F9DC5C',
     fontWeight: 'bold',
     fontSize: 16,
@@ -204,15 +203,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 22,
-    alignSelf: 'flex-start', // Pour coller à gauche, adapte selon ton besoin
+    alignSelf: 'flex-start',
   },
   anecdotesTitleBlue: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     color: '#00235B',
     fontSize: 24,
     fontWeight: 'bold',
   },
   anecdotesTitleYellow: {
-    backgroundColor: '#FFE066', // Jaune doux, adapte si besoin
+    backgroundColor: '#FFE066',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -220,16 +220,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 25, height: 40 },
-    shadowOpacity: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
     shadowRadius: 1,
     elevation: 12,
-    transform: [{ rotate: '-1deg' }], // Pour un léger effet de surélévation
+    transform: [{ rotate: '-1deg' }],
   },
   anecdotesTitleWhite: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
   },
-
 });

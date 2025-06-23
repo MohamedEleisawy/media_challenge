@@ -1,0 +1,43 @@
+@startuml
+!define RECTANGLE class
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+
+node "App Mobile\n(Android / iOS)\n(React Native / Expo)" as AppMobile {
+  component "UI\n(React Native)" as UI
+  component "Auth Service\n(Firebase Auth)" as Auth
+  component "Database Access\n(Firestore SDK)" as FirestoreSDK
+  component "Image Upload\n(Firebase Storage)" as StorageSDK
+}
+
+node "Firebase Cloud" as Firebase {
+  database "Firebase Firestore\n(Base de données NoSQL)" as Firestore
+  node "Firebase Auth" as FirebaseAuth
+  folder "Firebase Storage\n(Stockage d'images)" as FirebaseStorage
+}
+
+node "Panneau Admin Web\n(Accès réservé)" as AdminPanel {
+  component "Interface Admin\n(Suppression de données)" as AdminInterface
+  component "Accès Firestore / Auth" as AdminSDK
+}
+
+actor "Utilisateur" as User
+actor "Admin" as Admin
+
+' Relations utilisateur
+User --> UI : Interaction UI
+UI --> Auth : Login / Signup
+Auth --> FirebaseAuth : Authentification
+
+UI --> FirestoreSDK : CRUD anecdotes
+FirestoreSDK --> Firestore : Realtime sync (listener)
+
+UI --> StorageSDK : Upload / Read image
+StorageSDK --> FirebaseStorage : Stockage cloud
+
+' Relations admin
+Admin --> AdminInterface : Interface Web
+AdminInterface --> AdminSDK : Accès Firestore
+AdminSDK --> Firestore : Suppression / Lecture
+
+@enduml
