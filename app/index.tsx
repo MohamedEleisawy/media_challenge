@@ -1,6 +1,5 @@
 // app/index.tsx
-import { StyleSheet, View, Text, Button } from 'react-native';
-import { Link } from 'expo-router';
+import { StyleSheet, View, Text } from 'react-native';
 
 
 export default function Home() {
@@ -9,9 +8,6 @@ export default function Home() {
       <Text>Bienvenue sur mon app !</Text>
       <Text style={styles.title}>Bienvenue sur mon app !</Text>
       <Text style={styles.subtitle}>Bienvenue sur mon app !</Text>
-      <Link href="/signup" asChild>
-        <Button   title="Créer un compte" />
-      </Link>
     </View>
   );
 }
@@ -23,7 +19,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   subtitle: {
-    fontFamily: 'SpaceMono-Regular',
+    fontFamily: '',
     // fontFamily: 'Nunito-Bold',
     fontSize: 24,
   },
