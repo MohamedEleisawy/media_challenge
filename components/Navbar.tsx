@@ -1,37 +1,37 @@
-// components/Navbar.tsx
-import { View, Text, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
-import { useAuth } from '../authContext'; // Ton contexte
-import { useFonts } from 'expo-font';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Link, useRouter } from 'expo-router';
+import { useAuth } from '../authContext';
+import { Ionicons } from '@expo/vector-icons';
+
 export default function Navbar() {
   const { user } = useAuth();
-const [fontsLoaded] = useFonts({
-    'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
-    'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
-  });
-    if (!fontsLoaded) return null; // 👈 Attente du chargement des polices
+  const router = useRouter();
+
   return (
     <View style={styles.nav}>
+      {/* 👇 Logo à la place de "Accueil" */}
       <Link href="/" asChild>
-        <Text style={styles.link}>Accueil</Text>
+        <TouchableOpacity>
+          <Image
+            source={require('../assets/images/contrepoint_logo.png')} // Remplace par ton logo
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
       </Link>
-      {user ? (
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Link href="/profil" asChild>
-            <Text style={styles.link}>Profil</Text>
-          </Link>
-          {/* <Button title="Déconnexion" onPress={logout} /> */}
-        </View>
-      ) : (
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Link href="/login" asChild>
-            <Text style={styles.link}>Connexion</Text>
-          </Link>
-          <Link href="/signup" asChild>
-            <Text style={styles.link}>Inscription</Text>
-          </Link>
-        </View>
-      )}
+
+      {/* 👇 Icône de profil qui redirige vers /login si pas connecté */}
+      <TouchableOpacity
+        onPress={() => {
+          if (user) {
+            router.push('/profil');
+          } else {
+            router.push('/login');
+          }
+        }}
+      >
+        <Ionicons name="person-circle-outline" size={40} color="black" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -39,16 +39,14 @@ const [fontsLoaded] = useFonts({
 const styles = StyleSheet.create({
   nav: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 10,
-    backgroundColor: '#ddd',
-    marginTop: 40, // Pour éviter le chevauchement avec le status bar
+    paddingHorizontal: 20,
+    backgroundColor: '#ffff',
   },
-  link: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
-    fontSize: 16,
-    marginHorizontal: 8,
-    color: 'blue',
+  logo: {
+    width: 100,
+    height: 100,
   },
 });
