@@ -1,15 +1,29 @@
 import React from 'react';
-import { View, Text, TextInput, Button, ScrollView } from 'react-native';
-import Toast from 'react-native-root-toast'; // <-- import Toast cross-platform
+import { View, Text, TextInput, Button, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useForm, Controller } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { Timestamp, setDoc, doc} from 'firebase/firestore';
-// import { authStyles } from './styles/auth.styles';
-import { useRouter } from 'expo-router'; // <-- import useRouter for navigation
+import { Timestamp, setDoc, doc } from 'firebase/firestore';
+import { useRouter } from 'expo-router';
 
+// 🔧 Gestion des erreurs Firebase
+function getFirebaseAuthErrorMessage(errorCode: string) {
+  switch (errorCode) {
+    case 'auth/invalid-email':
+      return "L'adresse email n'est pas valide.";
+    case 'auth/email-already-in-use':
+      return "Cette adresse email est déjà utilisée.";
+    case 'auth/weak-password':
+      return "Le mot de passe est trop faible (minimum 6 caractères).";
+    default:
+      return "Une erreur est survenue. Veuillez réessayer.";
+  }
+}
+
+// ✅ Validation avec Yup
 const schema = yup.object({
   prenom: yup.string().required('Le prénom est obligatoire'),
   nom: yup.string().required('Le nom est obligatoire'),
@@ -23,7 +37,8 @@ const schema = yup.object({
 });
 
 export default function Signup() {
-  const router = useRouter(); // <-- ici
+  const router = useRouter();
+
   const {
     control,
     handleSubmit,
@@ -46,46 +61,93 @@ export default function Signup() {
       createdAt: Timestamp.fromDate(new Date()),
     });
 
-      Toast.show('Inscription réussie !', {
-        duration: Toast.durations.LONG,
-        position: Toast.positions.BOTTOM,
+      Toast.show({
+        type: 'success',
+        text1: '✅ Inscription réussie',
       });
-            router.replace('/'); // ✅ Redirection vers la page d'accueil (index.tsx)
+
+      router.replace('/');
     } catch (error: any) {
-      Toast.show(`Erreur : ${error.message}`, {
-        duration: Toast.durations.LONG,
-        position: Toast.positions.BOTTOM,
+      const message = getFirebaseAuthErrorMessage(error.code || '');
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur',
+        text2: message,
       });
     }
   };
 
   return (
-    <ScrollView >
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>Créer un compte</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Créer un compte</Text>
 
       {['prenom', 'nom','pseudo','email', 'password', 'confirmPassword'].map((field, index) => (
         <View key={index}>
           <Controller
             control={control}
-            name={field}
+            name={name}
             render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                placeholder={
-                  field === 'confirmPassword'
-                    ? 'Confirmer le mot de passe'
-                    : field.charAt(0).toUpperCase() + field.slice(1)
-                }
-                secureTextEntry={field.toLowerCase().includes('password')}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
+              <>
+                <TextInput
+                  placeholder={placeholder}
+                  secureTextEntry={secure}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  style={[
+                    styles.input,
+                    errors[name] ? { borderColor: 'red' } : null,
+                  ]}
+                />
+                {errors[name] && (
+                  <Text style={styles.error}>{errors[name]?.message}</Text>
+                )}
+              </>
             )}
           />
         </View>
       ))}
 
       <Button title="S'inscrire" onPress={handleSubmit(onSubmit)} disabled={isSubmitting} />
+
+      {/* 🔗 Lien vers la connexion */}
+      <TouchableOpacity onPress={() => router.push('/login')} style={styles.link}>
+        <Text>Deja inscrit ?</Text>
+        <Text style={styles.linkText}>Se connecter</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    paddingBottom: 60,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  fieldContainer: {
+    marginBottom: 15,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 10,
+  },
+  error: {
+    color: 'red',
+    marginTop: 4,
+  },
+  link: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#007bff',
+    textDecorationLine: 'underline',
+  },
+});
