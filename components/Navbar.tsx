@@ -2,10 +2,14 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { useAuth } from '../authContext'; // Ton contexte
-
+import { useFonts } from 'expo-font';
 export default function Navbar() {
   const { user } = useAuth();
-
+const [fontsLoaded] = useFonts({
+    'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
+    'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
+  });
+    if (!fontsLoaded) return null; // 👈 Attente du chargement des polices
   return (
     <View style={styles.nav}>
       <Link href="/" asChild>
@@ -42,6 +46,7 @@ const styles = StyleSheet.create({
     marginTop: 40, // Pour éviter le chevauchement avec le status bar
   },
   link: {
+    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
     fontSize: 16,
     marginHorizontal: 8,
     color: 'blue',
