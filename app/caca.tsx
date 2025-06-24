@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { collection, getDocs, query, orderBy, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import HeaderComponent from '@/components/HeaderComponent';
-import globalStyles from '@/styles/globalStyles';
 
 export default function Home() {
   const [anecdotes, setAnecdotes] = useState([]);
@@ -14,6 +12,7 @@ export default function Home() {
 
   const auth = getAuth();
 
+  // Écouter l’état de connexion de l’utilisateur
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
       setUser(user);
@@ -65,6 +64,7 @@ export default function Home() {
         voters: updatedVoters,
       });
 
+      // Mettre à jour localement
       setPolls(prev =>
         prev.map(p =>
           p.id === pollId ? { ...p, options: updatedOptions, voters: updatedVoters } : p
@@ -84,19 +84,8 @@ export default function Home() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <HeaderComponent />
-      <TouchableOpacity style={globalStyles.section} onPress={() => Linking.openURL('https://www.mes-allocs.fr/guides/aides-sociales/')}>
-        <Text style={globalStyles.sectionTitle}>Envie d'en parler ?</Text>
-      </TouchableOpacity>
-
-      <View style={globalStyles.containerButton}>
-        <Text style={globalStyles.TitleBlue}>Top</Text>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>anecdotes</Text>
-        </View>
-      </View>
-
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>📚 Anecdotes des utilisateurs</Text>
       {anecdotes.length === 0 ? (
         <Text style={styles.noData}>Aucune anecdote pour l’instant.</Text>
       ) : (
@@ -107,11 +96,8 @@ export default function Home() {
           </View>
         ))
       )}
-      <View style={globalStyles.containerButton}>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>Sondage</Text>
-        </View>
-      </View>
+
+      <Text style={[styles.header, { marginTop: 30 }]}>📊 Sondages</Text>
       {polls.length === 0 ? (
         <Text style={styles.noData}>Aucun sondage pour le moment.</Text>
       ) : (
@@ -146,25 +132,14 @@ export default function Home() {
           );
         })
       )}
-
-
-
-      <TouchableOpacity style={globalStyles.section} onPress={() => Linking.openURL('https://www.service-public.fr/particuliers/vosdroits/F20706')}>
-        <Text style={globalStyles.sectionTitle}>Suivez nos actualités</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Abonnez-vous à la newsletter</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
     padding: 20,
+    paddingBottom: 40,
   },
   center: {
     flex: 1,
