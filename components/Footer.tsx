@@ -8,19 +8,18 @@ export default function Footer({ styles }: { styles: any }) {
     <View style={styles.footerContainer}>
       <Link href="/" asChild>
         <TouchableOpacity style={styles.iconWrapper}>
-          <Ionicons name="home-outline" size={30} color="#0A2B55" />
+          <Ionicons name="home-outline" size={30} color="#fff" />
         </TouchableOpacity>
       </Link>
 
-      <Link href="/ajouter" asChild>
+      <Link href="/posts" asChild>
         <TouchableOpacity style={styles.centerButton}>
-          <Ionicons name="add" size={40} color="#0A2B55" />
+          <Ionicons name="add" size={40} color="#fff" />
         </TouchableOpacity>
       </Link>
-
       <Link href="/aide" asChild>
         <TouchableOpacity style={styles.iconWrapper}>
-          <Text style={styles.aideText}>AIDE</Text>
+          <Text style={styles.aidText}>AIDE</Text>
         </TouchableOpacity>
       </Link>
     </View>
