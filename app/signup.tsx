@@ -23,6 +23,8 @@ function getFirebaseAuthErrorMessage(errorCode: string) {
   }
 }
 
+
+
 // ✅ Validation avec Yup
 const schema = yup.object({
   prenom: yup.string().required('Le prénom est obligatoire'),
@@ -52,14 +54,14 @@ export default function Signup() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
-   await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      prenom: data.prenom,
-      nom: data.nom,
-      pseudo: data.pseudo,
-      email: data.email,
-      createdAt: Timestamp.fromDate(new Date()),
-    });
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        prenom: data.prenom,
+        nom: data.nom,
+        pseudo: data.pseudo,
+        email: data.email,
+        createdAt: Timestamp.fromDate(new Date()),
+      });
 
       Toast.show({
         type: 'success',
@@ -77,36 +79,57 @@ export default function Signup() {
     }
   };
 
+  // 🔧 Fonction à ajouter en haut de ton composant (avant le return)
+const getPlaceholder = (field) => {
+  switch (field) {
+    case 'prenom':
+      return 'Prénom';
+    case 'nom':
+      return 'Nom';
+    case 'pseudo':
+      return 'Pseudo';
+    case 'email':
+      return 'Adresse email';
+    case 'password':
+      return 'Mot de passe';
+    case 'confirmPassword':
+      return 'Confirmer le mot de passe';
+    default:
+      return '';
+  }
+};
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Créer un compte</Text>
 
-      {['prenom', 'nom','pseudo','email', 'password', 'confirmPassword'].map((field, index) => (
-        <View key={index}>
+      {['prenom', 'nom', 'pseudo', 'email', 'password', 'confirmPassword'].map((field, index) => (
+        <View key={index} style={styles.fieldContainer}>
           <Controller
             control={control}
-            name={name}
+            name={field}
             render={({ field: { onChange, onBlur, value } }) => (
               <>
                 <TextInput
-                  placeholder={placeholder}
-                  secureTextEntry={secure}
+                  placeholder={getPlaceholder(field)}
+                  secureTextEntry={field.toLowerCase().includes('password')}
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
                   style={[
                     styles.input,
-                    errors[name] ? { borderColor: 'red' } : null,
+                    errors[field] ? { borderColor: 'red' } : null,
                   ]}
                 />
-                {errors[name] && (
-                  <Text style={styles.error}>{errors[name]?.message}</Text>
+                {errors[field] && (
+                  <Text style={styles.error}>{errors[field]?.message}</Text>
                 )}
               </>
             )}
           />
         </View>
       ))}
+
 
       <Button title="S'inscrire" onPress={handleSubmit(onSubmit)} disabled={isSubmitting} />
 

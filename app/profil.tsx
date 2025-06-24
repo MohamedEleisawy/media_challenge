@@ -7,9 +7,9 @@ import Toast from 'react-native-root-toast';
 import { useAuth } from '../authContext';
 import { useFonts } from 'expo-font';
 import { auth, db } from '../firebaseConfig';
+import globalStyles from '../styles/globalStyles';
 
 export default function ProfileScreen() {
-
   const { user } = useAuth();
   const [userData, setUserData] = useState({
     createdAt: '',
@@ -22,10 +22,12 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
   const [fontsLoaded] = useFonts({
     'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
   });
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
@@ -47,7 +49,7 @@ export default function ProfileScreen() {
             textColor: "white",
           });
         }
-      } catch (error: any) {
+      } catch (error) {
         Toast.show(`❌ ${error.message}`, {
           backgroundColor: "#f44336",
           textColor: "white",
@@ -68,7 +70,7 @@ export default function ProfileScreen() {
         textColor: "white",
       });
       router.replace("/");
-    } catch (error: any) {
+    } catch (error) {
       Toast.show(`❌ ${error.message}`, {
         backgroundColor: "#f44336",
         textColor: "white",
@@ -76,7 +78,7 @@ export default function ProfileScreen() {
     }
   };
 
-  if (loading) {
+  if (loading || !fontsLoaded) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color="#00235B" />
@@ -84,7 +86,6 @@ export default function ProfileScreen() {
       </View>
     );
   }
-  if (!fontsLoaded) return null; 
 
   return (
     <View style={styles.container}>
@@ -94,53 +95,53 @@ export default function ProfileScreen() {
       />
       <Text style={styles.pseudo}>{userData.pseudo}</Text>
       <Text style={styles.infoText}>Date de création: {userData.createdAt}</Text>
-
-      <View style={styles.anecdotesTitleContainer}>
-        <Text style={styles.anecdotesTitleBlue}>Mes </Text>
-        <View style={styles.anecdotesTitleYellow}>
-          <Text style={styles.anecdotesTitleWhite}>anecdotes</Text>
+      
+      {/* Mes anecdotes */}
+      <View style={globalStyles.containerButton}>
+        <Text style={globalStyles.TitleBlue}>Mes </Text>
+        <View style={globalStyles.containerButtonBlue}>
+          <Text style={globalStyles.TitleWhite}>anecdotes</Text>
+        </View>
+      </View>
+      
+      <View style={globalStyles.containerButton}>
+        <Text style={globalStyles.TitleBlue}>Mes </Text>
+        <View style={globalStyles.containerButtonBlue}>
+          <Text style={globalStyles.TitleWhite}>statistiques</Text>
         </View>
       </View>
 
-      <View style={styles.anecdotesTitleContainer}>
-        <Text style={styles.anecdotesTitleBlue}>Mes </Text>
-        <View style={styles.anecdotesTitleYellow}>
-          <Text style={styles.anecdotesTitleWhite}>statistiques</Text>
+
+      {/* Mes préférences */}
+      <View style={globalStyles.containerButton}>
+        <Text style={globalStyles.TitleBlue}>Mes </Text>
+        <View style={globalStyles.containerButtonBlue}>
+          <Text style={globalStyles.TitleWhite}>préférences</Text>
         </View>
       </View>
+      <TouchableOpacity style={globalStyles.preferenceButton}>
+        <Text style={globalStyles.preferenceButtonText}>Confidentialité et modération</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/editProfil')}>
+        <Text style={globalStyles.preferenceButtonText}>Modifier le compte</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={globalStyles.preferenceButton}>
+        <Text style={globalStyles.preferenceButtonText} onPress={handleLogout}>Déconnexion</Text>
+      </TouchableOpacity>
 
-      <View style={styles.preferencesContainer}>
-        <Text style={styles.preferencesTitle}>Mes préférences</Text>
-        <TouchableOpacity style={styles.preferenceButton}>
-          <Text style={styles.preferenceButtonText}>Confidentialité</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.preferenceButton}>
-          <Text style={styles.preferenceButtonText}>Modération</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.preferenceButton}>
-          <Text style={styles.preferenceButtonText}>Apparence</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.preferenceButton}>
-          <Text style={styles.preferenceButtonText}>Notifications</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.preferenceButton} onPress={() => router.push('/editProfil')}>
-          <Text style={styles.preferenceButtonText}>Modifier le compte</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Button
+      {/* <Button
         title="🚪 Se déconnecter"
         onPress={handleLogout}
         color="#f44336"
-      />
+      /> */}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    alignItems: 'center',
     backgroundColor: '#fff',
   },
   avatar: {
@@ -150,19 +151,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 3,
     borderColor: '#00235B',
+    alignSelf: 'center',
   },
   pseudo: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontFamily: 'GreatVibes-Regular',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 7,
     color: '#00235B',
+    textAlign: 'center',
   },
   infoText: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontFamily: 'GreatVibes-Regular',
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 20,
     color: '#00235B',
+    textAlign: 'center',
   },
   loading: {
     flex: 1,
@@ -170,66 +174,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontFamily: 'GreatVibes-Regular',
     fontSize: 16,
     color: '#00235B',
   },
-  preferencesContainer: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  preferencesTitle: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#00235B',
-    textAlign: 'left',
-  },
-  preferenceButton: {
-    backgroundColor: '#00235B',
-    padding: 15,
-    marginVertical: 5,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  preferenceButtonText: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
-    color: '#F9DC5C',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  anecdotesTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 22,
-    alignSelf: 'flex-start',
-  },
-  anecdotesTitleBlue: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
-    color: '#00235B',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  anecdotesTitleYellow: {
-    backgroundColor: '#FFE066',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 1,
-    elevation: 12,
-    transform: [{ rotate: '-1deg' }],
-  },
-  anecdotesTitleWhite: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+  
 });

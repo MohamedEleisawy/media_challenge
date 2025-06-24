@@ -14,6 +14,8 @@ export default function Layout() {
   const [fontsLoaded] = useFonts({
     'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
+    'Nunito-Bold': require('../assets/fonts/Nunito-Bold.ttf'),
+    'Nunito-Regular': require('../assets/fonts/Nunito-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -53,11 +55,11 @@ const styles = StyleSheet.create({
   position: 'absolute',
   bottom: 28,           // remonte un peu au-dessus du footer
   alignSelf: 'center',  // centre horizontalement
-  backgroundColor: '#FFF2B2',
+  backgroundColor: '#00235B',
   borderRadius: 50,
   padding: 10,
   borderWidth: 4,
-  borderColor: '#3E5F8A',
+  borderColor: '#7595C7',
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 6 },
   shadowOpacity: 0.3,
@@ -73,12 +75,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#FFF2B2',
+    backgroundColor: '#00235B',
     paddingTop: 20,
     paddingBottom: 10,
     borderTopWidth: 2,
-    borderTopColor: '#3E5F8A',
+    borderTopColor: '#7595C7',
     zIndex: 10,
+  },
+  aideText: {
+    fontFamily: 'Nunito-Regular',
+    fontSize: 16,
+    color: '#fff',
   },
   // tes autres styles...
 });
