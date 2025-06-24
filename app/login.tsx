@@ -3,16 +3,16 @@ import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'rea
 import { useForm, Controller } from 'react-hook-form';
 import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import Toast from 'react-native-toast-message';
 import { useRouter, Link } from 'expo-router';
 
-// 🔧 Fonction d'erreurs Firebase
+// 🔧 Gestion des erreurs Firebase
 function getFirebaseAuthErrorMessage(errorCode: string) {
   switch (errorCode) {
     case 'auth/invalid-email':
-      return "L'adresse email n'est pas valide.";
+      return "L'adresse email est invalide.";
     case 'auth/user-disabled':
       return "Ce compte a été désactivé.";
     case 'auth/user-not-found':
@@ -35,7 +35,11 @@ const schema = Yup.object().shape({
 export default function LoginScreen() {
   const router = useRouter();
 
-  const { control, handleSubmit, formState: { errors }, getValues } = useForm({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     resolver: yupResolver(schema),
   });
 
@@ -46,7 +50,7 @@ export default function LoginScreen() {
         type: 'success',
         text1: '✅ Connexion réussie',
       });
-      router.replace('/');
+      router.replace('/'); // Redirection après connexion
     } catch (error: any) {
       const message = getFirebaseAuthErrorMessage(error.code || '');
       Toast.show({
@@ -55,41 +59,6 @@ export default function LoginScreen() {
         text2: message,
       });
     }
-  };
-
-  const handleResetPassword = async () => {
-    const email = getValues("email");
-
-    if (!email) {
-      Toast.show({
-        type: 'info',
-        text1: '📧 Entrez votre email pour réinitialiser.',
-      });
-      return;
-    }
-
-    try {
-      await sendPasswordResetEmail(auth, email);
-      Toast.show({
-        type: 'success',
-        text1: '🔁 Email de réinitialisation envoyé',
-      });
-    } catch (error: any) {
-      const message = getFirebaseAuthErrorMessage(error.code || '');
-      Toast.show({
-        type: 'error',
-        text1: 'Erreur',
-        text2: message,
-      });
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    Toast.show({
-      type: 'info',
-      text1: '👋 Déconnecté avec succès',
-    });
   };
 
   return (
@@ -113,7 +82,7 @@ export default function LoginScreen() {
       />
       {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
-      {/* Password */}
+      {/* Mot de passe */}
       <Controller
         control={control}
         name="password"
@@ -129,22 +98,23 @@ export default function LoginScreen() {
       />
       {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
 
+      {/* Bouton Connexion */}
       <Button title="Se connecter" onPress={handleSubmit(onSubmit)} />
 
       {/* 🔁 Mot de passe oublié */}
-      <TouchableOpacity onPress={handleResetPassword} style={styles.link}>
-        <Text style={styles.linkText}>🔁 Mot de passe oublié ?</Text>
-      </TouchableOpacity>
+      <Link href="/forgotPassword" asChild>
+        <TouchableOpacity style={styles.link}>
+          <Text style={styles.linkText}>🔁 Mot de passe oublié ?</Text>
+        </TouchableOpacity>
+      </Link>
 
-      {/* ➕ Lien vers l'inscription */}
+      {/* ➕ Lien inscription */}
       <View style={styles.signupContainer}>
         <Text>Pas encore de compte ?</Text>
         <Link href="/signup" asChild>
           <Text style={styles.linkText}>S'inscrire</Text>
         </Link>
       </View>
-
-      
     </View>
   );
 }
@@ -156,8 +126,5 @@ const styles = StyleSheet.create({
   error: { color: 'red', marginBottom: 8 },
   link: { marginTop: 15, alignItems: 'center' },
   linkText: { color: '#007bff', marginTop: 5 },
-  signupContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
+  signupContainer: { marginTop: 20, alignItems: 'center' },
 });
