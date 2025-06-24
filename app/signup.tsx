@@ -36,6 +36,15 @@ const schema = yup.object({
     .required('Confirmation obligatoire'),
 });
 
+const fields = [
+  { name: 'prenom', placeholder: 'Prénom', secure: false },
+  { name: 'nom', placeholder: 'Nom', secure: false },
+  { name: 'pseudo', placeholder: 'Pseudo', secure: false },
+  { name: 'email', placeholder: 'Adresse e-mail', secure: false },
+  { name: 'password', placeholder: 'Mot de passe', secure: true },
+  { name: 'confirmPassword', placeholder: 'Confirme le mot de passe', secure: true },
+];
+
 export default function Signup() {
   const router = useRouter();
 
@@ -52,14 +61,14 @@ export default function Signup() {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
-   await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      prenom: data.prenom,
-      nom: data.nom,
-      pseudo: data.pseudo,
-      email: data.email,
-      createdAt: Timestamp.fromDate(new Date()),
-    });
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        prenom: data.prenom,
+        nom: data.nom,
+        pseudo: data.pseudo,
+        email: data.email,
+        createdAt: Timestamp.fromDate(new Date()),
+      });
 
       Toast.show({
         type: 'success',
@@ -81,8 +90,8 @@ export default function Signup() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Créer un compte</Text>
 
-      {['prenom', 'nom','pseudo','email', 'password', 'confirmPassword'].map((field, index) => (
-        <View key={index}>
+      {fields.map(({ name, placeholder, secure }) => (
+        <View key={name} style={styles.fieldContainer}>
           <Controller
             control={control}
             name={name}
@@ -100,7 +109,7 @@ export default function Signup() {
                   ]}
                 />
                 {errors[name] && (
-                  <Text style={styles.error}>{errors[name]?.message}</Text>
+                  <Text style={styles.error}>{errors[name]?.message as string}</Text>
                 )}
               </>
             )}
@@ -110,9 +119,8 @@ export default function Signup() {
 
       <Button title="S'inscrire" onPress={handleSubmit(onSubmit)} disabled={isSubmitting} />
 
-      {/* 🔗 Lien vers la connexion */}
       <TouchableOpacity onPress={() => router.push('/login')} style={styles.link}>
-        <Text>Deja inscrit ?</Text>
+        <Text>Déjà inscrit ?</Text>
         <Text style={styles.linkText}>Se connecter</Text>
       </TouchableOpacity>
     </ScrollView>

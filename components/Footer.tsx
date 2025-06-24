@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 
+
 export default function Footer({ styles }: { styles: any }) {
   return (
     <View style={styles.footerContainer}>
@@ -12,7 +13,7 @@ export default function Footer({ styles }: { styles: any }) {
         </TouchableOpacity>
       </Link>
 
-      <Link href="/ajouter" asChild>
+      <Link href="/posts" asChild>
         <TouchableOpacity style={styles.centerButton}>
           <Ionicons name="add" size={40} color="#0A2B55" />
         </TouchableOpacity>
