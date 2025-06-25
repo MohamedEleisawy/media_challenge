@@ -1,6 +1,6 @@
 import globalStyles from '@/styles/globalStyles';
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Animated, Linking } from 'react-native';
 import HeaderComponent from '@/components/HeaderComponent';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {

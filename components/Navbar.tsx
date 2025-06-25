@@ -26,11 +26,11 @@ export default function Navbar() {
           if (user) {
             router.push('/profil');
           } else {
-            router.push('/login');
+            router.push('/loginChoice');
           }
         }}
       >
-        <Ionicons name="person-circle-outline" size={40} color="black" />
+        <Ionicons name="person-circle-outline" size={50} color="black" />
       </TouchableOpacity>
     </View>
   );
@@ -41,12 +41,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
+    paddingLeft: 18,
+    paddingTop: 30,
+    paddingVertical: 25,
+    paddingHorizontal: 40,
     backgroundColor: '#ffff',
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 130,
+    height: 110,
+
   },
 });

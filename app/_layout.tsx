@@ -12,7 +12,6 @@ export default function Layout() {
   const [loading, setLoading] = useState(true);
 
   const [fontsLoaded] = useFonts({
-    'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
     'Nunito-Bold': require('../assets/fonts/Nunito-Bold.ttf'),
     'Nunito-Regular': require('../assets/fonts/Nunito-Regular.ttf'),
@@ -53,7 +52,7 @@ const styles = StyleSheet.create({
   },
   centerButton: {
   position: 'absolute',
-  bottom: 28,           // remonte un peu au-dessus du footer
+  bottom: 40,           // remonte un peu au-dessus du footer
   alignSelf: 'center',  // centre horizontalement
   backgroundColor: '#00235B',
   borderRadius: 50,
@@ -64,7 +63,7 @@ const styles = StyleSheet.create({
   shadowOffset: { width: 0, height: 6 },
   shadowOpacity: 0.3,
   shadowRadius: 6,
-  elevation: 5,
+  elevation: 10,
   zIndex: 20,
 },
   footerContainer: {
@@ -76,8 +75,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: '#00235B',
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingTop: 25,
+    paddingBottom: 5,
     borderTopWidth: 2,
     borderTopColor: '#7595C7',
     zIndex: 10,
@@ -86,7 +85,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Regular',
     fontSize: 16,
     color: '#fff',
+    paddingBottom: 20,
   },
+  home: {
+    paddingBottom: 20,
+  }
   // tes autres styles...
 });
 
