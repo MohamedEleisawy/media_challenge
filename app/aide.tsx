@@ -1,35 +1,27 @@
-import globalStyles from '@/styles/globalStyles';
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager, Animated, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import HeaderComponent from '@/components/HeaderComponent';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import globalStyles from '@/styles/globalStyles';
 
 const FAQItem = ({ question, answer, isExpanded, onPress }) => {
-  const rotationAnim = useRef(new Animated.Value(0)).current;
+  const rotation = useSharedValue(0);
 
   const toggleChevron = () => {
-    Animated.timing(rotationAnim, {
-      toValue: isExpanded ? 0 : 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    rotation.value = withTiming(isExpanded ? 0 : 90, { duration: 300 });
   };
 
-  const spin = rotationAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotation.value}deg` }],
+    };
   });
 
   return (
     <View style={styles.faqItem}>
       <TouchableOpacity onPress={() => { onPress(); toggleChevron(); }} style={styles.questionContainer}>
         <Text style={styles.questionText}>{question}</Text>
-        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <Text style={styles.chevron}>▶</Text>
-        </Animated.View>
+        <Animated.Text style={[styles.chevron, animatedStyle]}>▶</Animated.Text>
       </TouchableOpacity>
       {isExpanded && (
         <View style={styles.answerContainer}>
@@ -44,7 +36,6 @@ const FAQScreen = () => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   const toggleExpand = (index) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
@@ -124,7 +115,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
   },
- 
   faqContainer: {
     marginTop: 20,
   },

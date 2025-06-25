@@ -3,7 +3,7 @@ serviceId: "voixinterieur"
 location: "us-central1"
 schema:
   source: "./schema"
-  datasource:
+  adatasource:
     postgresql:
       database: "fdcdb"
       cloudSql:
