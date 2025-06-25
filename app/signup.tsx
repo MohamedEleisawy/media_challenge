@@ -27,8 +27,6 @@ function getFirebaseAuthErrorMessage(errorCode: string) {
 
 // ✅ Validation avec Yup
 const schema = yup.object({
-  prenom: yup.string().required('Le prénom est obligatoire'),
-  nom: yup.string().required('Le nom est obligatoire'),
   email: yup.string().email('Email invalide').required('Email est obligatoire'),
   pseudo: yup.string().required('Le pseudo est obligatoire'),
   password: yup.string().min(6, 'Minimum 6 caractères').required('Mot de passe obligatoire'),
@@ -37,15 +35,6 @@ const schema = yup.object({
     .oneOf([yup.ref('password')], 'Les mots de passe doivent correspondre')
     .required('Confirmation obligatoire'),
 });
-
-const fields = [
-  { name: 'prenom', placeholder: 'Prénom', secure: false },
-  { name: 'nom', placeholder: 'Nom', secure: false },
-  { name: 'pseudo', placeholder: 'Pseudo', secure: false },
-  { name: 'email', placeholder: 'Adresse e-mail', secure: false },
-  { name: 'password', placeholder: 'Mot de passe', secure: true },
-  { name: 'confirmPassword', placeholder: 'Confirme le mot de passe', secure: true },
-];
 
 export default function Signup() {
   const router = useRouter();
@@ -65,16 +54,6 @@ export default function Signup() {
 
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
-        prenom: data.prenom,
-        nom: data.nom,
-        pseudo: data.pseudo,
-        email: data.email,
-        createdAt: Timestamp.fromDate(new Date()),
-      });
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        prenom: data.prenom,
-        nom: data.nom,
         pseudo: data.pseudo,
         email: data.email,
         createdAt: Timestamp.fromDate(new Date()),
@@ -99,10 +78,6 @@ export default function Signup() {
   // 🔧 Fonction à ajouter en haut de ton composant (avant le return)
 const getPlaceholder = (field) => {
   switch (field) {
-    case 'prenom':
-      return 'Prénom';
-    case 'nom':
-      return 'Nom';
     case 'pseudo':
       return 'Pseudo';
     case 'email':
@@ -120,8 +95,8 @@ const getPlaceholder = (field) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Créer un compte</Text>
 
-      {fields.map(({ name, placeholder, secure }) => (
-        <View key={name} style={styles.fieldContainer}>
+      {['pseudo', 'email', 'password', 'confirmPassword'].map((field, index) => (
+        <View key={index} style={styles.fieldContainer}>
           <Controller
             control={control}
             name={field}
@@ -138,8 +113,8 @@ const getPlaceholder = (field) => {
                     errors[field] ? { borderColor: 'red' } : null,
                   ]}
                 />
-                {errors[name] && (
-                  <Text style={styles.error}>{errors[name]?.message as string}</Text>
+                {errors[field] && (
+                  <Text style={styles.error}>{errors[field]?.message}</Text>
                 )}
               </>
             )}
@@ -150,8 +125,9 @@ const getPlaceholder = (field) => {
 
       <Button title="S'inscrire" onPress={handleSubmit(onSubmit)} disabled={isSubmitting} />
 
+      {/* 🔗 Lien vers la connexion */}
       <TouchableOpacity onPress={() => router.push('/login')} style={styles.link}>
-        <Text>Déjà inscrit ?</Text>
+        <Text>Deja inscrit ?</Text>
         <Text style={styles.linkText}>Se connecter</Text>
       </TouchableOpacity>
     </ScrollView>

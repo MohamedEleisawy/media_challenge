@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const [fontsLoaded] = useFonts({
-    'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
+    'Nunito-Regular': require('../assets/fonts/Nunito-Regular.ttf'),
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
   });
 
@@ -154,15 +154,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   pseudo: {
-    fontFamily: 'GreatVibes-Regular',
+    fontFamily: 'Nunito-Regular',
     fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 7,
     color: '#00235B',
     textAlign: 'center',
   },
   infoText: {
-    fontFamily: 'GreatVibes-Regular',
+    fontFamily: 'Nunito-Regular',
     fontSize: 16,
     marginBottom: 20,
     color: '#00235B',
@@ -174,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontFamily: 'GreatVibes-Regular',
+    fontFamily: 'Nunito-Regular',
     fontSize: 16,
     color: '#00235B',
   },

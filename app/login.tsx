@@ -110,9 +110,9 @@ export default function LoginScreen() {
 
       {/* ➕ Lien inscription */}
       <View style={styles.signupContainer}>
-        <Text>Pas encore de compte ?</Text>
+        <Text>Pas de compte ?</Text>
         <Link href="/signup" asChild>
-          <Text style={styles.linkText}>S'inscrire</Text>
+          <Text style={styles.linkText}>Inscris-toi maintenant !</Text>
         </Link>
       </View>
     </View>

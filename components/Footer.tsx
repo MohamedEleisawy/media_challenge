@@ -9,7 +9,7 @@ export default function Footer({ styles }: { styles: any }) {
     <View style={styles.footerContainer}>
       <Link href="/" asChild>
         <TouchableOpacity style={styles.iconWrapper}>
-          <Ionicons name="home-outline" size={30} color="#fff" />
+          <Ionicons name="home-outline" size={30} color="#fff" style={styles.home}/>
         </TouchableOpacity>
       </Link>
 
@@ -20,7 +20,7 @@ export default function Footer({ styles }: { styles: any }) {
       </Link>
       <Link href="/aide" asChild>
         <TouchableOpacity style={styles.iconWrapper}>
-          <Text style={styles.aidText}>AIDE</Text>
+          <Text style={styles.aideText}>AIDE</Text>
         </TouchableOpacity>
       </Link>
     </View>
