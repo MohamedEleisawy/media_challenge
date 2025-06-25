@@ -5,7 +5,8 @@ import { db } from '../firebaseConfig';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import HeaderComponent from '@/components/HeaderComponent';
 import globalStyles from '@/styles/globalStyles';
-
+import AnecdoteCarousel from '@/components/AnecdoteCarousel';
+import { useUnstableGlobalHref } from 'expo-router';
 export default function Home() {
   const [anecdotes, setAnecdotes] = useState([]);
   const [polls, setPolls] = useState([]);
@@ -96,17 +97,12 @@ export default function Home() {
           <Text style={globalStyles.TitleWhite}>anecdotes</Text>
         </View>
       </View>
+      <AnecdoteCarousel anecdotes={anecdotes.slice(0, 5)} />
+      <TouchableOpacity style={globalStyles.section} onPress={() => useUnstableGlobalHref('/anecdotes')}>
+        <Text style={globalStyles.sectionTitle}>Voir toutes les anecdotes</Text>
+      </TouchableOpacity>
+      
 
-      {anecdotes.length === 0 ? (
-        <Text style={styles.noData}>Aucune anecdote pour l’instant.</Text>
-      ) : (
-        anecdotes.map(anecdote => (
-          <View key={anecdote.id} style={styles.card}>
-            <Text style={styles.author}>👤 {anecdote.author}</Text>
-            <Text style={styles.text}>{anecdote.text}</Text>
-          </View>
-        ))
-      )}
       <View style={globalStyles.containerButton}>
         <View style={globalStyles.containerButtonBlue}>
           <Text style={globalStyles.TitleWhite}>Sondage</Text>
@@ -147,9 +143,7 @@ export default function Home() {
         })
       )}
 
-
-
-      <TouchableOpacity style={globalStyles.section} onPress={() => Linking.openURL('https://www.service-public.fr/particuliers/vosdroits/F20706')}>
+      <TouchableOpacity style={globalStyles.section} >
         <Text style={globalStyles.sectionTitle}>Suivez nos actualités</Text>
       </TouchableOpacity>
 
