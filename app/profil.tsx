@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Button, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Toast from 'react-native-root-toast';
 import { useAuth } from '../authContext';
 import { useFonts } from 'expo-font';
@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const [fontsLoaded] = useFonts({
-    'GreatVibes-Regular': require('../assets/fonts/GreatVibes-Regular.ttf'),
+    'GreatVibes-Regularr': require('../assets/fonts/GreatVibes-Regular.ttf'),
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
   });
 
@@ -124,6 +124,9 @@ export default function ProfileScreen() {
       </TouchableOpacity>
       <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/editProfil')}>
         <Text style={globalStyles.preferenceButtonText}>Modifier le compte</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/aide')}>
+        <Text style={globalStyles.preferenceButtonText}>Aide</Text>
       </TouchableOpacity>
       <TouchableOpacity style={globalStyles.preferenceButton}>
         <Text style={globalStyles.preferenceButtonText} onPress={handleLogout}>Déconnexion</Text>

@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 
 const globalStyles = StyleSheet.create({
   containerButton: {
+    fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 22,
@@ -10,14 +11,14 @@ const globalStyles = StyleSheet.create({
   },
 
   TitleWhite: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     color: '#FFFFFF',
     fontSize: 32,
     fontWeight: 'bold',
   },
 
   TitleBlue: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     color: '#00235B',
     fontSize: 32,
     fontWeight: 'bold',
@@ -41,7 +42,7 @@ const globalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   TitleYellow: {
-    fontFamily: 'GreatVibes-Regular', // Assurez-vous que ce nom est correct
+    fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     color: '#00235B',
     fontSize: 32,
     fontWeight: 'bold',
