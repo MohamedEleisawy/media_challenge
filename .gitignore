@@ -12,6 +12,8 @@ expo-env.d.ts
 .metro-health-check*
 
 # 👉 Android/iOS Native
+/android
+/ios
 .kotlin/
 *.orig.*
 *.jks
@@ -19,7 +21,6 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
-.
 
 # 👉 macOS
 .DS_Store
