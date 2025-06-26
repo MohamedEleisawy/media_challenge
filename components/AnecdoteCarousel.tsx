@@ -1,12 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
 import { db } from '../firebaseConfig';
-import { doc, updateDoc, arrayUnion, onSnapshot, collection } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, collection, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+
+
 
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 50;
+
 
 export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,7 +17,7 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
     const flatListRef = useRef();
     const auth = getAuth();
     const user = auth.currentUser;
-
+    const EMOJIS = ['🥰', '😂', '😯', '😢', '😡'];
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, 'anecdotes'), (snapshot) => {
             const updatedAnecdotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -44,6 +47,7 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
         index,
     });
 
+
     const handleEmojiPress = async (anecdoteId, emoji) => {
         if (!user) {
             console.log("User not authenticated");
@@ -52,14 +56,36 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
 
         try {
             const anecdoteRef = doc(db, 'anecdotes', anecdoteId);
-            await updateDoc(anecdoteRef, {
-                [`reactions.${emoji}`]: arrayUnion(user.uid)
+
+            // 1. Récupérer les réactions actuelles
+            const anecdoteSnap = await getDoc(anecdoteRef);
+            const data = anecdoteSnap.data();
+            const currentReactions = data.reactions || {};
+
+            // 2. Vérifier si l'utilisateur a déjà réagi avec cet emoji
+            const userAlreadyReacted = (currentReactions[emoji] || []).includes(user.uid);
+
+            const newReactions = {};
+            EMOJIS.forEach(e => {
+                // On retire l'utilisateur de toutes les réactions
+                newReactions[e] = (currentReactions[e] || []).filter(uid => uid !== user.uid);
             });
-            console.log("Document successfully updated!");
+
+            if (!userAlreadyReacted) {
+                // 3. Ajouter l'utilisateur à la réaction choisie
+                newReactions[emoji].push(user.uid);
+            }
+            // Sinon, il a cliqué sur la même réaction => il ne sera dans aucune réaction
+
+            // 4. Mettre à jour les réactions
+            await updateDoc(anecdoteRef, { reactions: newReactions });
+
+            console.log("Réaction mise à jour !");
         } catch (err) {
-            console.error("Error updating document: ", err);
+            console.error("Erreur lors de la mise à jour de la réaction :", err);
         }
     };
+
 
     const renderItem = ({ item }) => (
         <View style={styles.card}>
@@ -126,7 +152,7 @@ const styles = StyleSheet.create({
     author: { fontWeight: '600', marginBottom: 5 },
     text: { fontSize: 16, marginBottom: 10 },
     reactions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
-    emojiButton: { padding: 6, borderRadius: 25, backgroundColor: '#7595C7', marginHorizontal: 4, alignItems: 'center' },
+    emojiButton: { padding: 6, borderRadius: 25, backgroundColor: '#7595C7', marginHorizontal: 6, alignItems: 'center' },
     emoji: { fontSize: 16 },
     reactionCount: { fontSize: 12, color: '#000' },
     buttonRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 },
