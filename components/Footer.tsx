@@ -13,14 +13,14 @@ export default function Footer({ styles }: { styles: any }) {
         </TouchableOpacity>
       </Link>
 
-      <Link href="/posts" asChild>
+      <Link href="/postChoice" asChild>
         <TouchableOpacity style={styles.centerButton}>
           <Ionicons name="add" size={40} color="#fff" />
         </TouchableOpacity>
       </Link>
-      <Link href="/aide" asChild>
+      <Link href="/news" asChild>
         <TouchableOpacity style={styles.iconWrapper}>
-          <Text style={styles.aideText}>AIDE</Text>
+          <Text style={styles.aideText}>NEWS</Text>
         </TouchableOpacity>
       </Link>
     </View>
