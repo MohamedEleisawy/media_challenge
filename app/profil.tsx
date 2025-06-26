@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Toast from 'react-native-root-toast';
@@ -20,6 +20,7 @@ export default function ProfileScreen() {
     uid: '',
     avatar: ''
   });
+  const [anecdotes, setAnecdotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -29,26 +30,27 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       if (!user) return;
 
       try {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const createdAtDate = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown date';
-          setUserData({
-            ...data,
-            createdAt: createdAtDate
-          });
-        } else {
-          Toast.show("❌ Aucune donnée utilisateur trouvée.", {
-            backgroundColor: "#f44336",
-            textColor: "white",
-          });
+        // Récupérer les infos utilisateur
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          const createdAtDate = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Date inconnue';
+          setUserData({ ...data, createdAt: createdAtDate });
         }
+
+        // Récupérer ses anecdotes
+        const anecdotesRef = collection(db, 'anecdotes');
+        const q = query(anecdotesRef, where('author', '==', user.email));
+        const querySnapshot = await getDocs(q);
+        const anecdotesList = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setAnecdotes(anecdotesList);
       } catch (error) {
         Toast.show(`❌ ${error.message}`, {
           backgroundColor: "#f44336",
@@ -59,7 +61,7 @@ export default function ProfileScreen() {
       }
     };
 
-    fetchUserData();
+    fetchData();
   }, [user]);
 
   const handleLogout = async () => {
@@ -95,31 +97,47 @@ export default function ProfileScreen() {
       />
       <Text style={styles.pseudo}>{userData.pseudo}</Text>
       <Text style={styles.infoText}>Date de création: {userData.createdAt}</Text>
-      
-      {/* Mes anecdotes */}
+
+      {/* Section Anecdotes */}
       <View style={globalStyles.containerButton}>
         <Text style={globalStyles.TitleBlue}>Mes </Text>
         <View style={globalStyles.containerButtonBlue}>
           <Text style={globalStyles.TitleWhite}>anecdotes</Text>
         </View>
       </View>
-      
+
+      <View style={{ marginTop: 20 }}>
+        {anecdotes.length === 0 ? (
+          <Text style={{ fontStyle: 'italic', color: '#999' }}>Aucune anecdote publiée.</Text>
+        ) : (
+          anecdotes.map((anecdote) => (
+            <View key={anecdote.id} style={styles.anecdoteBox}>
+              <Text style={styles.anecdoteText}>{anecdote.text}</Text>
+              <Text style={styles.anecdoteDate}>
+                Publié le {new Date(anecdote.createdAt?.seconds * 1000).toLocaleDateString()}
+              </Text>
+            </View>
+          ))
+        )}
+      </View>
+
+      {/* Statistiques */}
       <View style={globalStyles.containerButton}>
         <Text style={globalStyles.TitleBlue}>Mes </Text>
         <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>statistiques</Text>
+          <Text style={globalStyles.TitleWhite}>sondages</Text>
         </View>
       </View>
 
-
-      {/* Mes préférences */}
+      {/* Préférences */}
       <View style={globalStyles.containerButton}>
         <Text style={globalStyles.TitleBlue}>Mes </Text>
         <View style={globalStyles.containerButtonBlue}>
           <Text style={globalStyles.TitleWhite}>préférences</Text>
         </View>
       </View>
-      <TouchableOpacity style={globalStyles.preferenceButton}>
+
+      <TouchableOpacity style={globalStyles.preferenceButton}  onPress={() => router.push('/ConfidentialiteModeration')}>
         <Text style={globalStyles.preferenceButtonText}>Confidentialité et modération</Text>
       </TouchableOpacity>
       <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/editProfil')}>
@@ -128,15 +146,9 @@ export default function ProfileScreen() {
       <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/aide')}>
         <Text style={globalStyles.preferenceButtonText}>Aide</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={globalStyles.preferenceButton}>
-        <Text style={globalStyles.preferenceButtonText} onPress={handleLogout}>Déconnexion</Text>
+      <TouchableOpacity style={globalStyles.preferenceButton} onPress={handleLogout}>
+        <Text style={globalStyles.preferenceButtonText}>Déconnexion</Text>
       </TouchableOpacity>
-
-      {/* <Button
-        title="🚪 Se déconnecter"
-        onPress={handleLogout}
-        color="#f44336"
-      /> */}
     </View>
   );
 }
@@ -170,6 +182,20 @@ const styles = StyleSheet.create({
     color: '#00235B',
     textAlign: 'center',
   },
+  anecdoteBox: {
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 8,
+  },
+  anecdoteText: {
+    color: '#333',
+  },
+  anecdoteDate: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
   loading: {
     flex: 1,
     justifyContent: 'center',
@@ -180,5 +206,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#00235B',
   },
-  
 });
