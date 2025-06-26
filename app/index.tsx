@@ -6,8 +6,9 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import HeaderComponent from '@/components/HeaderComponent';
 import globalStyles from '@/styles/globalStyles';
 import AnecdoteCarousel from '@/components/AnecdoteCarousel';
-import { useUnstableGlobalHref } from 'expo-router';
+import { useRouter } from 'expo-router';
 export default function Home() {
+  const router = useRouter();
   const [anecdotes, setAnecdotes] = useState([]);
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,10 +99,12 @@ export default function Home() {
         </View>
       </View>
       <AnecdoteCarousel anecdotes={anecdotes.slice(0, 5)} />
-      <TouchableOpacity style={globalStyles.section} onPress={() => useUnstableGlobalHref('/anecdotes')}>
+      <TouchableOpacity
+        style={globalStyles.section}
+        onPress={() => router.push('/anecdote')}
+      >
         <Text style={globalStyles.sectionTitle}>Voir toutes les anecdotes</Text>
       </TouchableOpacity>
-      
 
       <View style={globalStyles.containerButton}>
         <View style={globalStyles.containerButtonBlue}>
