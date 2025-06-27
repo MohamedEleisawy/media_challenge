@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.voixinterneapp"
+      "bundleIdentifier": "com.anonymous.voixinterneapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -47,6 +50,7 @@
       "eas": {
         "projectId": "b9565868-b631-46d3-9026-3cc440756e4d"
       }
-    }
+    },
+    "owner": "ealmvin"
   }
 }
