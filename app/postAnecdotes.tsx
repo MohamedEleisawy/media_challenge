@@ -4,7 +4,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../authContext';
 import Toast from 'react-native-toast-message';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRouter } from "expo-router";
 
 // Composant Checkbox custom
 function Checkbox({ label, checked, onChange }) {
@@ -19,6 +20,8 @@ function Checkbox({ label, checked, onChange }) {
 }
 
 export default function PostAnecdoteScreen() {
+  // Utilisation de useNavigation pour la navigation
+  const router = useRouter();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [checks, setChecks] = useState([false, false, false]);
@@ -55,7 +58,8 @@ export default function PostAnecdoteScreen() {
       await addDoc(collection(db, 'anecdotes'), {
         text: text.trim(),
         createdAt: serverTimestamp(),
-        author: user.email || 'Anonyme',
+        authorId: user.uid,
+        
       });
       Toast.show({
         type: 'success',
@@ -66,13 +70,14 @@ export default function PostAnecdoteScreen() {
       setChecks([false, false, false]);
       // Redirection après un court délai pour laisser le toast s'afficher
       setTimeout(() => {
-        navigation.navigate('Home'); // remplace 'Home' par le nom exact de ta route d'accueil
+        router.push('/'); // Utilisation de useRouter pour naviguer
       }, 1200);
-    } catch (err) {
+    } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Erreur',
         text2: "Impossible d'envoyer l'anecdote.",
+        error: error.message,
       });
     } finally {
       setLoading(false);
