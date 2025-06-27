@@ -44,7 +44,8 @@ export default function ProfileScreen() {
 
         // Récupérer ses anecdotes
         const anecdotesRef = collection(db, 'anecdotes');
-        const q = query(anecdotesRef, where('author', '==', user.email));
+const q = query(anecdotesRef, where('authorId', '==', user.uid));
+
         const querySnapshot = await getDocs(q);
         const anecdotesList = querySnapshot.docs.map(doc => ({
           id: doc.id,

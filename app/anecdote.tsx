@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, LogBox } from 'react-native';
 import { db } from '../firebaseConfig';
-import { doc, updateDoc, arrayUnion, onSnapshot, collection } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, collection, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import globalStyles from '@/styles/globalStyles';
 
@@ -9,52 +9,103 @@ const Anecdote = () => {
     useEffect(() => {
         LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
     }, []);
+
     const [anecdotes, setAnecdotes] = useState([]);
     const auth = getAuth();
     const user = auth.currentUser;
 
-    useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'anecdotes'), (snapshot) => {
-            const updatedAnecdotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setAnecdotes(updatedAnecdotes);
-        });
-        return () => unsubscribe();
-    }, []);
+
+    const EMOJIS = ['🥰', '😂', '😯', '😢', '😡'];
 
     const handleEmojiPress = async (anecdoteId, emoji) => {
         if (!user) return;
         try {
             const anecdoteRef = doc(db, 'anecdotes', anecdoteId);
-            await updateDoc(anecdoteRef, {
-                [`reactions.${emoji}`]: arrayUnion(user.uid)
+
+            // 1. Récupérer les réactions actuelles
+            const anecdoteSnap = await getDoc(anecdoteRef);
+            const data = anecdoteSnap.data();
+            const currentReactions = data.reactions || {};
+
+            // 2. Vérifier si l'utilisateur a déjà réagi avec cet emoji
+            const userAlreadyReacted = (currentReactions[emoji] || []).includes(user.uid);
+
+            // 3. Retirer l'utilisateur de toutes les réactions
+            const newReactions = {};
+            EMOJIS.forEach(e => {
+                newReactions[e] = (currentReactions[e] || []).filter(uid => uid !== user.uid);
             });
+
+            // 4. S'il n'avait pas déjà réagi avec l'emoji, on l'ajoute
+            if (!userAlreadyReacted) {
+                newReactions[emoji].push(user.uid);
+            }
+
+            // 5. Mettre à jour les réactions
+            await updateDoc(anecdoteRef, { reactions: newReactions });
         } catch (err) {
-            console.error("Error updating document: ", err);
+            console.error("Erreur lors de la mise à jour des réactions :", err);
         }
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.card}>
-            <View style={styles.authorRow}>
-                <Text style={styles.authorIcon}>👤</Text>
-                <Text style={styles.author}>{item.author}</Text>
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(collection(db, 'anecdotes'), async (snapshot) => {
+            const anecdoteDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const anecdotesWithPseudo = await Promise.all(anecdoteDocs.map(async (anecdote) => {
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', anecdote.authorId));
+                    const userData = userDoc.exists() ? userDoc.data() : {};
+                    const pseudo = typeof userData.pseudo === 'string' ? userData.pseudo : 'Inconnu';
+
+                    return {
+                        ...anecdote,
+                        pseudo,
+                    };
+                } catch (err) {
+                    console.error('Erreur en récupérant le pseudo:', err);
+                    return {
+                        ...anecdote,
+                        pseudo: 'Inconnu',
+                    };
+                }
+            }));
+
+            setAnecdotes(anecdotesWithPseudo);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const renderItem = ({ item }) => {
+        const pseudo = typeof item.pseudo === 'string' ? item.pseudo : 'Inconnu';
+
+        return (
+            <View style={styles.card}>
+                <View style={styles.authorRow}>
+                    <Text style={styles.authorIcon}>👤</Text>
+                    <Text style={styles.author}>{pseudo}</Text>
+                </View>
+                <Text style={styles.text}>{item.text}</Text>
+                <View style={styles.reactions}>
+                    {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
+                        <TouchableOpacity
+                            key={emoji}
+                            style={styles.emojiButton}
+                            onPress={() => handleEmojiPress(item.id, emoji)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.emoji}>{emoji}</Text>
+                            <Text style={styles.reactionCount}>
+                                {Array.isArray(item.reactions?.[emoji]) ? item.reactions[emoji].length : 0}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
             </View>
-            <Text style={styles.text}>{item.text}</Text>
-            <View style={styles.reactions}>
-                {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
-                    <TouchableOpacity
-                        key={emoji}
-                        style={styles.emojiButton}
-                        onPress={() => handleEmojiPress(item.id, emoji)}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={styles.emoji}>{emoji}</Text>
-                        <Text style={styles.reactionCount}>{item.reactions?.[emoji]?.length || 0}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>
@@ -70,7 +121,6 @@ const Anecdote = () => {
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
             />
-
         </View>
     );
 };
