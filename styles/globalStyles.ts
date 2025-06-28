@@ -13,14 +13,14 @@ const globalStyles = StyleSheet.create({
   TitleWhite: {
     fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     color: '#FFFFFF',
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
   },
 
   TitleBlue: {
     fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     color: '#00235B',
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
   },
   containerButtonYellow: {
@@ -44,7 +44,7 @@ const globalStyles = StyleSheet.create({
   TitleYellow: {
     fontFamily: 'GreatVibes-Regularr', // Assurez-vous que ce nom est correct
     color: '#00235B',
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
   },
    preferencesTitleContainer: {

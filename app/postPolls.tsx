@@ -40,7 +40,7 @@ export default function PostPollScreen() {
       const user = auth.currentUser;
 
       await addDoc(collection(db, 'polls'), {
-        author: user?.displayName || 'Anonyme',
+        authorId: user?.uid || 'anonymous',
         question: sondage.trim(),
         options: [
           { id: '1', text: 'Oui', votes: 0 },
