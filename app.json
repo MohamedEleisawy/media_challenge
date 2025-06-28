@@ -4,7 +4,7 @@
     "slug": "voix-interne-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splashscreen_logo.png",
     "scheme": "voixinterneapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

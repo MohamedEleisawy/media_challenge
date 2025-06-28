@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 export default function SplashScreen() {
   return (
     <View style={styles.container}>
-      <Image source={require('../assets/images/logo_contrepoint.png')} style={{ width: 150, height: 150 }} />
+      <Image source={require('../assets/images/splashscreen_logo.png')} style={{ width: 150, height: 150 }} />
       <Text style={styles.text}>Chargement...</Text>
     </View>
   );

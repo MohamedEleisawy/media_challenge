@@ -1,13 +1,13 @@
-import React from 'react';
-import { View, Text, TextInput, Button, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import Toast from 'react-native-toast-message';
-import { useForm, Controller } from 'react-hook-form';
-import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { auth, db } from '../firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { Timestamp, setDoc, doc } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { Timestamp, doc, setDoc } from 'firebase/firestore';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import * as yup from 'yup';
+import { auth, db } from '../firebaseConfig';
 
 // 🔧 Gestion des erreurs Firebase
 function getFirebaseAuthErrorMessage(errorCode: string) {
@@ -56,6 +56,7 @@ export default function Signup() {
         uid: user.uid,
         pseudo: data.pseudo,
         email: data.email,
+        role: 'user', // Rôle par défaut
         createdAt: Timestamp.fromDate(new Date()),
       });
 
