@@ -7,6 +7,7 @@ import HeaderComponent from '@/components/HeaderComponent';
 import globalStyles from '@/styles/globalStyles';
 import AnecdoteCarousel from '@/components/AnecdoteCarousel';
 import { useRouter } from 'expo-router';
+
 export default function Home() {
   const router = useRouter();
   const [anecdotes, setAnecdotes] = useState([]);

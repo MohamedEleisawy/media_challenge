@@ -44,7 +44,8 @@ export default function ProfileScreen() {
 
         // Récupérer ses anecdotes
         const anecdotesRef = collection(db, 'anecdotes');
-        const q = query(anecdotesRef, where('author', '==', user.email));
+const q = query(anecdotesRef, where('authorId', '==', user.uid));
+
         const querySnapshot = await getDocs(q);
         const anecdotesList = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -143,7 +144,7 @@ export default function ProfileScreen() {
       <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/editProfil')}>
         <Text style={globalStyles.preferenceButtonText}>Modifier le compte</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/aide')}>
+      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/help')}>
         <Text style={globalStyles.preferenceButtonText}>Aide</Text>
       </TouchableOpacity>
       <TouchableOpacity style={globalStyles.preferenceButton} onPress={handleLogout}>

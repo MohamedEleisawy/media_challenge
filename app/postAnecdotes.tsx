@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { useAuth } from '../authContext';
-import Toast from 'react-native-toast-message';
-import { useNavigation } from '@react-navigation/native';
 
 // Composant Checkbox custom
 function Checkbox({ label, checked, onChange }) {
@@ -23,31 +21,14 @@ export default function PostAnecdoteScreen() {
   const [loading, setLoading] = useState(false);
   const [checks, setChecks] = useState([false, false, false]);
   const { user } = useAuth();
-  const navigation = useNavigation();
 
   const handlePost = async () => {
-    if (!user) {
-      Toast.show({
-        type: 'error',
-        text1: 'Connexion requise',
-        text2: 'Vous devez être connecté pour publier une anecdote.',
-      });
-      return;
-    }
     if (text.trim() === '') {
-      Toast.show({
-        type: 'error',
-        text1: 'Erreur',
-        text2: 'Le message ne peut pas être vide.',
-      });
+      Alert.alert('Erreur', 'Le message ne peut pas être vide.');
       return;
     }
     if (checks.includes(false)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Cases non cochées',
-        text2: 'Merci de cocher toutes les cases avant de publier.',
-      });
+      Alert.alert('Erreur', 'Merci de cocher toutes les cases.');
       return;
     }
     setLoading(true);
@@ -55,25 +36,13 @@ export default function PostAnecdoteScreen() {
       await addDoc(collection(db, 'anecdotes'), {
         text: text.trim(),
         createdAt: serverTimestamp(),
-        author: user.email || 'Anonyme',
+        author: user?.email || 'Anonyme',
       });
-      Toast.show({
-        type: 'success',
-        text1: 'Succès',
-        text2: 'Anecdote envoyée !',
-      });
+      Alert.alert('Succès', 'Anecdote envoyée !');
       setText('');
       setChecks([false, false, false]);
-      // Redirection après un court délai pour laisser le toast s'afficher
-      setTimeout(() => {
-        navigation.navigate('Home'); // remplace 'Home' par le nom exact de ta route d'accueil
-      }, 1200);
     } catch (err) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erreur',
-        text2: "Impossible d'envoyer l'anecdote.",
-      });
+      Alert.alert('Erreur', "Impossible d'envoyer l'anecdote.");
     } finally {
       setLoading(false);
     }
@@ -86,7 +55,8 @@ export default function PostAnecdoteScreen() {
   ];
 
   return (
-    <View style={styles.screen}>
+        <View style={styles.screen}>
+
       <Text style={styles.title}>Raconte-nous ton anecdote !</Text>
       <Text style={styles.subtitle}>Donne le contexte, sois pertinent et surtout : dans le respect !</Text>
       <View style={styles.card}>
@@ -117,19 +87,12 @@ export default function PostAnecdoteScreen() {
         />
       ))}
       <TouchableOpacity
-        style={[
-          styles.button,
-          (loading || !user) && styles.buttonDisabled
-        ]}
+        style={[styles.button, loading && styles.buttonDisabled]}
         onPress={handlePost}
-        disabled={loading || !user}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>
-          {loading ? 'Envoi...' : user ? 'Publier' : 'Connexion requise'}
-        </Text>
+        <Text style={styles.buttonText}>{loading ? 'Envoi...' : 'Publier'}</Text>
       </TouchableOpacity>
-      {/* Place Toast at the end of your main view */}
-      <Toast />
     </View>
   );
 }
@@ -170,9 +133,9 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: '#7595C7',
     backgroundColor: '#fff', marginRight: 8, alignItems: 'center', justifyContent: 'center',
   },
-  checkboxChecked: { backgroundColor: '#7595C7', borderColor: '#7595C7' },
+  checkboxChecked: { backgroundColor: '#f7b731', borderColor: '#7595C7' },
   checkboxTick: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  checkboxLabel: { color: '#7595C7', fontSize: 14, flex: 1 },
+  checkboxLabel: { color: '#444', fontSize: 14, flex: 1 },
   button: {
     backgroundColor: '#222', borderRadius: 24, marginTop: 24,
     paddingVertical: 14, alignItems: 'center',

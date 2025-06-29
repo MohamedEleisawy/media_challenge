@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { db } from '../firebaseConfig';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
 
 export default function PostPollScreen() {
   const [sondage, setSondage] = useState('');
   const [checks, setChecks] = useState([false, false, false]);
   const [choice, setChoice] = useState(null);
+  const [user, setUser] = useState(null);
 
   const checkboxLabels = [
     "Je m'engage à m'exprimer avec respect, sans insultes ni propos discriminants.",
     "Je m'exprime en mon nom, avec sincérité et responsabilité.",
     "Je reconnais la diversité des vécus et je contribue à un espace d’écoute et de dialogue.",
   ];
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handlePublish = async () => {
     if (checks.includes(false)) {
@@ -35,12 +44,18 @@ export default function PostPollScreen() {
       return;
     }
 
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
+    if (!user) {
+      Toast.show({
+        type: 'error',
+        text1: 'Non connecté',
+        text2: 'Connecte-toi pour publier un sondage.',
+      });
+      return;
+    }
 
+    try {
       await addDoc(collection(db, 'polls'), {
-        author: user?.displayName || 'Anonyme',
+        author: user.displayName || 'Anonyme',
         question: sondage.trim(),
         options: [
           { id: '1', text: 'Oui', votes: 0 },
@@ -73,6 +88,7 @@ export default function PostPollScreen() {
     <View style={styles.screen}>
       <Text style={styles.header}>Fais un sondage !</Text>
       <Text style={styles.subHeader}>Sois concis et surtout reste dans le respect de tous !</Text>
+
       <View style={styles.card}>
         <View style={styles.userRow}>
           <View style={styles.avatar}>
@@ -87,34 +103,29 @@ export default function PostPollScreen() {
           />
         </View>
         <Text style={styles.counter}>{sondage.length}/140</Text>
+
         <View style={styles.choicesRow}>
           <TouchableOpacity
-            style={[
-              styles.choiceBtn,
-              choice === 'oui' && styles.choiceBtnActive,
-            ]}
+            style={[styles.choiceBtn, choice === 'oui' && styles.choiceBtnActive]}
             onPress={() => setChoice('oui')}
           >
-            <Text style={[
-              styles.choiceText,
-              choice === 'oui' && styles.choiceTextActive,
-            ]}>Oui…</Text>
+            <Text style={[styles.choiceText, choice === 'oui' && styles.choiceTextActive]}>
+              Oui…
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.choiceBtn,
-              choice === 'non' && styles.choiceBtnActive,
-            ]}
+            style={[styles.choiceBtn, choice === 'non' && styles.choiceBtnActive]}
             onPress={() => setChoice('non')}
           >
-            <Text style={[
-              styles.choiceText,
-              choice === 'non' && styles.choiceTextActive,
-            ]}>Non…</Text>
+            <Text style={[styles.choiceText, choice === 'non' && styles.choiceTextActive]}>
+              Non…
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
+
       <Text style={styles.sectionTitle}>En partageant mon témoignage,</Text>
+
       {checkboxLabels.map((label, i) => (
         <TouchableOpacity
           key={i}
@@ -131,6 +142,7 @@ export default function PostPollScreen() {
           <Text style={styles.checkboxLabel}>{label}</Text>
         </TouchableOpacity>
       ))}
+
       <TouchableOpacity
         style={[
           styles.publishButton,
@@ -139,8 +151,9 @@ export default function PostPollScreen() {
         onPress={handlePublish}
         disabled={sondage.trim() === '' || checks.includes(false)}
       >
-        <Text style={styles.buttonText}>Publier</Text>
+        <Text style={styles.buttonText}>{user ? 'Publier' : 'Connexion requise'}</Text>
       </TouchableOpacity>
+
       <Toast />
     </View>
   );
