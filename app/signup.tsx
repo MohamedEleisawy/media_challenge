@@ -9,8 +9,9 @@ import Toast from 'react-native-toast-message';
 import * as yup from 'yup';
 import { auth, db } from '../firebaseConfig';
 
-// 🔧 Gestion des erreurs Firebase
+// 🔧 Fonction utilitaire pour traduire les erreurs Firebase en français
 function getFirebaseAuthErrorMessage(errorCode: string) {
+  // Mapping des codes d'erreur Firebase vers des messages compréhensibles
   switch (errorCode) {
     case 'auth/invalid-email':
       return "L'adresse email n'est pas valide.";
@@ -23,9 +24,7 @@ function getFirebaseAuthErrorMessage(errorCode: string) {
   }
 }
 
-
-
-// ✅ Validation avec Yup
+// ✅ Schéma de validation Yup pour valider les données du formulaire
 const schema = yup.object({
   email: yup.string().email('Email invalide').required('Email est obligatoire'),
   pseudo: yup.string().required('Le pseudo est obligatoire'),
@@ -39,6 +38,7 @@ const schema = yup.object({
 export default function Signup() {
   const router = useRouter();
 
+  // Configuration du hook de formulaire avec validation automatique
   const {
     control,
     handleSubmit,
@@ -47,19 +47,23 @@ export default function Signup() {
     resolver: yupResolver(schema),
   });
 
+  // Fonction de soumission du formulaire d'inscription
   const onSubmit = async (data: any) => {
     try {
+      // Création du compte Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
+      // Sauvegarde des informations utilisateur dans Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         pseudo: data.pseudo,
         email: data.email,
-        role: 'user', // Rôle par défaut
+        role: 'user', // Attribution du rôle par défaut
         createdAt: Timestamp.fromDate(new Date()),
       });
 
+      // Notification de succès et redirection
       Toast.show({
         type: 'success',
         text1: '✅ Inscription réussie',
@@ -67,6 +71,7 @@ export default function Signup() {
 
       router.replace('/');
     } catch (error: any) {
+      // Gestion des erreurs avec messages traduits
       const message = getFirebaseAuthErrorMessage(error.code || '');
       Toast.show({
         type: 'error',
@@ -76,26 +81,27 @@ export default function Signup() {
     }
   };
 
-  // 🔧 Fonction à ajouter en haut de ton composant (avant le return)
-const getPlaceholder = (field) => {
-  switch (field) {
-    case 'pseudo':
-      return 'Pseudo';
-    case 'email':
-      return 'Adresse email';
-    case 'password':
-      return 'Mot de passe';
-    case 'confirmPassword':
-      return 'Confirmer le mot de passe';
-    default:
-      return '';
-  }
-};
+  // Fonction utilitaire pour générer les placeholders des champs
+  const getPlaceholder = (field) => {
+    switch (field) {
+      case 'pseudo':
+        return 'Pseudo';
+      case 'email':
+        return 'Adresse email';
+      case 'password':
+        return 'Mot de passe';
+      case 'confirmPassword':
+        return 'Confirmer le mot de passe';
+      default:
+        return '';
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Créer un compte</Text>
 
+      {/* Génération dynamique des champs de formulaire */}
       {['pseudo', 'email', 'password', 'confirmPassword'].map((field, index) => (
         <View key={index} style={styles.fieldContainer}>
           <Controller
@@ -111,9 +117,11 @@ const getPlaceholder = (field) => {
                   value={value}
                   style={[
                     styles.input,
+                    // Mise en surbrillance des champs avec erreur
                     errors[field] ? { borderColor: 'red' } : null,
                   ]}
                 />
+                {/* Affichage conditionnel des messages d'erreur */}
                 {errors[field] && (
                   <Text style={styles.error}>{errors[field]?.message}</Text>
                 )}
@@ -123,10 +131,10 @@ const getPlaceholder = (field) => {
         </View>
       ))}
 
-
+      {/* Bouton de soumission avec état de chargement */}
       <Button title="S'inscrire" onPress={handleSubmit(onSubmit)} disabled={isSubmitting} />
 
-      {/* 🔗 Lien vers la connexion */}
+      {/* Lien de navigation vers la page de connexion */}
       <TouchableOpacity onPress={() => router.push('/login')} style={styles.link}>
         <Text>Deja inscrit ?</Text>
         <Text style={styles.linkText}>Se connecter</Text>

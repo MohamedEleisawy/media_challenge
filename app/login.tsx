@@ -1,14 +1,14 @@
-import React from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { Link, useRouter } from 'expo-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useRouter, Link } from 'expo-router';
+import * as Yup from 'yup';
+import { auth } from '../firebaseConfig';
 
-// 🔧 Gestion des erreurs Firebase
+// 🔧 Fonction de gestion des erreurs Firebase spécifiques à la connexion
 function getFirebaseAuthErrorMessage(errorCode: string) {
   switch (errorCode) {
     case 'auth/invalid-email':
@@ -26,7 +26,7 @@ function getFirebaseAuthErrorMessage(errorCode: string) {
   }
 }
 
-// ✅ Schéma de validation
+// ✅ Schéma de validation pour les champs de connexion
 const schema = Yup.object().shape({
   email: Yup.string().email("Email invalide").required("L'email est requis"),
   password: Yup.string().min(6, "Minimum 6 caractères").required("Mot de passe requis"),
@@ -35,6 +35,7 @@ const schema = Yup.object().shape({
 export default function LoginScreen() {
   const router = useRouter();
 
+  // Configuration du formulaire avec validation
   const {
     control,
     handleSubmit,
@@ -43,15 +44,22 @@ export default function LoginScreen() {
     resolver: yupResolver(schema),
   });
 
+  // Fonction de traitement de la connexion
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
+      // Authentification avec Firebase Auth
       await signInWithEmailAndPassword(auth, data.email, data.password);
+      
+      // Notification de succès
       Toast.show({
         type: 'success',
         text1: '✅ Connexion réussie',
       });
-      router.replace('/'); // Redirection après connexion
+      
+      // Redirection vers la page d'accueil après connexion
+      router.replace('/');
     } catch (error: any) {
+      // Gestion des erreurs avec messages personnalisés
       const message = getFirebaseAuthErrorMessage(error.code || '');
       Toast.show({
         type: 'error',
@@ -65,7 +73,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Connexion</Text>
 
-      {/* Email */}
+      {/* Champ Email avec validation */}
       <Controller
         control={control}
         name="email"
@@ -82,7 +90,7 @@ export default function LoginScreen() {
       />
       {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
-      {/* Mot de passe */}
+      {/* Champ Mot de passe avec validation */}
       <Controller
         control={control}
         name="password"
@@ -98,17 +106,16 @@ export default function LoginScreen() {
       />
       {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
 
-      {/* Bouton Connexion */}
+      {/* Bouton de connexion */}
       <Button title="Se connecter" onPress={handleSubmit(onSubmit)} />
 
-      {/* 🔁 Mot de passe oublié */}
+      {/* Liens utiles : mot de passe oublié et inscription */}
       <Link href="/forgotPassword" asChild>
         <TouchableOpacity style={styles.link}>
           <Text style={styles.linkText}>🔁 Mot de passe oublié ?</Text>
         </TouchableOpacity>
       </Link>
 
-      {/* ➕ Lien inscription */}
       <View style={styles.signupContainer}>
         <Text>Pas de compte ?</Text>
         <Link href="/signup" asChild>

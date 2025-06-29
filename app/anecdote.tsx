@@ -1,8 +1,9 @@
 import globalStyles from '@/styles/globalStyles';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { getAuth } from 'firebase/auth';
-import { collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { FlatList, LogBox, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, LogBox, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { db } from '../firebaseConfig';
 
 const Anecdote = () => {
@@ -18,7 +19,18 @@ const Anecdote = () => {
     const EMOJIS = ['🥰', '😂', '😯', '😢', '😡'];
 
     const handleEmojiPress = async (anecdoteId, emoji) => {
-        if (!user) return;
+        if (!user) {
+            // Affichage d'un message d'erreur si l'utilisateur n'est pas connecté
+            Alert.alert(
+                'Connexion requise', 
+                'Vous devez être connecté pour réagir aux anecdotes. Connectez-vous pour participer !',
+                [
+                    { text: 'OK', style: 'default' }
+                ]
+            );
+            return;
+        }
+        
         try {
             const anecdoteRef = doc(db, 'anecdotes', anecdoteId);
 
@@ -45,9 +57,41 @@ const Anecdote = () => {
             await updateDoc(anecdoteRef, { reactions: newReactions });
         } catch (err) {
             console.error("Erreur lors de la mise à jour des réactions :", err);
+            // Affichage d'un message d'erreur en cas de problème technique
+            Alert.alert(
+                'Erreur', 
+                'Impossible d\'enregistrer votre réaction. Veuillez réessayer.',
+                [
+                    { text: 'OK', style: 'default' }
+                ]
+            );
         }
     };
 
+    const handleReport = async (anecdote) => {
+        if (!user) {
+            Alert.alert('Connexion requise', 'Vous devez être connecté pour signaler un contenu.');
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, 'reports'), {
+                type: 'anecdote',
+                contentId: anecdote.id,
+                contentText: anecdote.text,
+                authorId: anecdote.authorId,
+                authorPseudo: anecdote.pseudo,
+                reportedBy: user.uid,
+                reportedAt: new Date(),
+                status: 'pending'
+            });
+
+            Alert.alert('Signalement envoyé', 'L\'anecdote a été bien signalée. Merci de nous aider à maintenir une communauté respectueuse.');
+        } catch (error) {
+            console.error('Erreur signalement:', error);
+            Alert.alert('Erreur', 'Impossible d\'envoyer le signalement. Veuillez réessayer.');
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, 'anecdotes'), async (snapshot) => {
@@ -85,6 +129,9 @@ const Anecdote = () => {
             <View style={styles.card}>
                 <View style={styles.authorRow}>
                     <Text style={styles.authorIcon}>👤</Text>
+                    <TouchableOpacity onPress={() => handleReport(item)}>
+                        <Ionicons name="flag" size={25} style={styles.flag} />
+                    </TouchableOpacity>
                     <Text style={styles.author}>{pseudo}</Text>
                 </View>
                 <Text style={styles.text}>{item.text}</Text>
@@ -212,6 +259,13 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: '#35518A',
         fontWeight: '500',
+    },
+    flag: {
+        position: 'absolute',
+        left: 270,
+        top: -10,
+        color: '#35518A',
+        zIndex: 1,
     },
 });
 

@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { useAuth } from '../authContext';
-import Toast from 'react-native-toast-message';
-import { useNavigation, useRoute } from '@react-navigation/native';
 import { useRouter } from "expo-router";
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { useAuth } from '../authContext';
+import { db } from '../firebaseConfig';
 
-// Composant Checkbox custom
+// Composant personnalisé pour les cases à cocher avec état
 function Checkbox({ label, checked, onChange }) {
   return (
     <TouchableOpacity style={styles.checkboxContainer} onPress={() => onChange(!checked)}>
@@ -20,15 +19,16 @@ function Checkbox({ label, checked, onChange }) {
 }
 
 export default function PostAnecdoteScreen() {
-  // Utilisation de useNavigation pour la navigation
+  // Navigation et gestion d'état
   const router = useRouter();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checks, setChecks] = useState([false, false, false]);
-  const { user } = useAuth();
-  const navigation = useNavigation();
+  const [checks, setChecks] = useState([false, false, false]); // État des cases à cocher
+  const { user } = useAuth(); // Récupération de l'utilisateur connecté
 
+  // Fonction de publication d'anecdote avec validations
   const handlePost = async () => {
+    // Vérification de l'authentification
     if (!user) {
       Toast.show({
         type: 'error',
@@ -37,6 +37,8 @@ export default function PostAnecdoteScreen() {
       });
       return;
     }
+    
+    // Validation du contenu
     if (text.trim() === '') {
       Toast.show({
         type: 'error',
@@ -45,6 +47,8 @@ export default function PostAnecdoteScreen() {
       });
       return;
     }
+    
+    // Vérification de l'acceptation des conditions
     if (checks.includes(false)) {
       Toast.show({
         type: 'error',
@@ -53,26 +57,33 @@ export default function PostAnecdoteScreen() {
       });
       return;
     }
+    
     setLoading(true);
     try {
+      // Sauvegarde de l'anecdote dans Firestore
       await addDoc(collection(db, 'anecdotes'), {
         text: text.trim(),
-        createdAt: serverTimestamp(),
-        authorId: user.uid,
-        
+        createdAt: serverTimestamp(), // Timestamp côté serveur
+        authorId: user.uid, // Association avec l'utilisateur
       });
+      
+      // Notification de succès
       Toast.show({
         type: 'success',
         text1: 'Succès',
         text2: 'Anecdote envoyée !',
       });
+      
+      // Réinitialisation du formulaire
       setText('');
       setChecks([false, false, false]);
-      // Redirection après un court délai pour laisser le toast s'afficher
+      
+      // Redirection différée pour laisser le toast s'afficher
       setTimeout(() => {
-        router.push('/'); // Utilisation de useRouter pour naviguer
+        router.push('/');
       }, 1200);
     } catch (error) {
+      // Gestion des erreurs de publication
       Toast.show({
         type: 'error',
         text1: 'Erreur',
@@ -84,56 +95,69 @@ export default function PostAnecdoteScreen() {
     }
   };
 
+  // Définition des textes des conditions d'utilisation
   const checkboxLabels = [
     "Je m'engage à m'exprimer avec respect, sans insultes ni propos discriminants.",
     "Je m'exprime en mon nom, avec sincérité et responsabilité.",
-    "Je reconnais la diversité des vécus et je contribue à un espace d’écoute et de dialogue.",
+    "Je reconnais la diversité des vécus et je contribue à un espace d'écoute et de dialogue.",
   ];
 
   return (
     <View style={styles.screen}>
       <Text style={styles.title}>Raconte-nous ton anecdote !</Text>
       <Text style={styles.subtitle}>Donne le contexte, sois pertinent et surtout : dans le respect !</Text>
+      
+      {/* Carte de saisie avec avatar et compteur de caractères */}
       <View style={styles.card}>
         <View style={styles.row}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
+              {/* Affichage de la première lettre de l'email ou A par défaut */}
               {user?.email ? user.email[0].toUpperCase() : 'A'}
             </Text>
           </View>
           <TextInput
             style={styles.input}
             multiline
-            maxLength={300}
+            maxLength={300} // Limitation de caractères
             placeholder="Nouvelle anecdote..."
             value={text}
             onChangeText={setText}
           />
         </View>
+        {/* Compteur de caractères en temps réel */}
         <Text style={styles.counter}>{text.length}/300</Text>
       </View>
+      
+      {/* Section des conditions d'utilisation */}
       <Text style={styles.sectionTitle}>En partageant mon témoignage,</Text>
       {checkboxLabels.map((label, i) => (
         <Checkbox
           key={i}
           label={label}
           checked={checks[i]}
+          // Mise à jour de l'état des cases à cocher
           onChange={val => setChecks(checks.map((v, idx) => idx === i ? val : v))}
         />
       ))}
+      
+      {/* Bouton de publication avec états conditionnels */}
       <TouchableOpacity
         style={[
           styles.button,
+          // Désactivation visuelle si conditions non remplies
           (loading || !user) && styles.buttonDisabled
         ]}
         onPress={handlePost}
         disabled={loading || !user}
       >
         <Text style={styles.buttonText}>
+          {/* Texte dynamique selon l'état */}
           {loading ? 'Envoi...' : user ? 'Publier' : 'Connexion requise'}
         </Text>
       </TouchableOpacity>
-      {/* Place Toast at the end of your main view */}
+      
+      {/* Composant Toast pour les notifications */}
       <Toast />
     </View>
   );

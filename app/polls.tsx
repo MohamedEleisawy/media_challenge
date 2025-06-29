@@ -1,17 +1,20 @@
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { db } from '../firebaseConfig';
 import globalStyles from '../styles/globalStyles';
 
 export default function PollsPage() {
+  // États pour gérer les sondages et l'utilisateur connecté
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
 
   const auth = getAuth();
 
+  // Écoute des changements d'état d'authentification
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -19,13 +22,16 @@ export default function PollsPage() {
     return () => unsubscribe();
   }, []);
 
+  // Écoute en temps réel des sondages avec récupération des pseudos
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'polls'), async (snapshot) => {
       const pollDocs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
+      // Enrichissement de chaque sondage avec le pseudo de l'auteur
       const pollsWithPseudo = await Promise.all(
         pollDocs.map(async (poll) => {
           try {
+            // Récupération du document utilisateur pour obtenir le pseudo
             const userDoc = await getDoc(doc(db, 'users', poll.authorId));
             const userData = userDoc.exists() ? userDoc.data() : {};
             const pseudo = typeof userData.pseudo === 'string' ? userData.pseudo : 'Inconnu';
@@ -33,6 +39,7 @@ export default function PollsPage() {
             return {
               ...poll,
               pseudo,
+              // Protection contre les données malformées
               options: Array.isArray(poll.options) ? poll.options : [],
               voters: Array.isArray(poll.voters) ? poll.voters : [],
             };
@@ -55,28 +62,62 @@ export default function PollsPage() {
     return () => unsubscribe();
   }, []);
 
+  // Gestion du vote avec vérifications de sécurité
   const handleVote = async (pollId, optionId) => {
     try {
       const pollRef = doc(db, 'polls', pollId);
       const poll = polls.find((p) => p.id === pollId);
 
+      // Vérifications : utilisateur connecté, sondage existant, pas déjà voté
       if (!user || !poll || poll.voters?.includes(user.uid)) return;
 
+      // Mise à jour des votes : incrémentation de l'option sélectionnée
       const updatedOptions = poll.options.map((opt) =>
         opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
       );
+      // Ajout de l'utilisateur à la liste des votants
       const updatedVoters = [...(poll.voters || []), user.uid];
 
+      // Sauvegarde en base de données
       await updateDoc(pollRef, {
         options: updatedOptions,
         voters: updatedVoters,
       });
 
+      // Mise à jour de l'état local pour un affichage immédiat
       setPolls((prev) =>
         prev.map((p) => (p.id === pollId ? { ...p, options: updatedOptions, voters: updatedVoters } : p))
       );
     } catch (err) {
       console.error('Error during voting:', err);
+    }
+  };
+
+  // Fonction de signalement de contenu inapproprié
+  const handleReport = async (poll) => {
+    // Vérification de l'authentification avant signalement
+    if (!user) {
+      Alert.alert('Connexion requise', 'Vous devez être connecté pour signaler un contenu.');
+      return;
+    }
+
+    try {
+      // Création d'un nouveau signalement dans la collection 'reports'
+      await addDoc(collection(db, 'reports'), {
+        type: 'poll',
+        contentId: poll.id,
+        contentText: poll.question,
+        authorId: poll.authorId,
+        authorPseudo: poll.pseudo,
+        reportedBy: user.uid,
+        reportedAt: new Date(),
+        status: 'pending',
+      });
+
+      Alert.alert('Signalement envoyé', 'Le sondage a été bien signalé. Merci de nous aider à maintenir une communauté respectueuse.');
+    } catch (error) {
+      console.error('Erreur signalement:', error);
+      Alert.alert('Erreur', 'Impossible d\'envoyer le signalement. Veuillez réessayer.');
     }
   };
 
@@ -109,6 +150,9 @@ export default function PollsPage() {
               <View style={styles.cardHeader}>
                 <View style={styles.authorRow}>
                   <Text style={styles.authorIcon}>👤</Text>
+                  <TouchableOpacity onPress={() => handleReport(poll)}>
+                    <Ionicons name="flag" size={20} style={styles.flag} />
+                  </TouchableOpacity>
                   <Text style={styles.author}>{poll.pseudo}</Text>
                 </View>
               </View>
@@ -226,5 +270,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 6,
+  },
+    flag: {
+    position: 'absolute',
+    left: 260,
+    top: -10,
+    color: '#35518A',
   },
 });

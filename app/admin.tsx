@@ -7,7 +7,7 @@ import { db } from '../firebaseConfig';
 
 export default function AdminPage() {
   const { user, userRole } = useAuth();
-  const [userData, setUserData] = useState(null);
+  // const [userData, setUserData] = useState(null);
   const [users, setUsers] = useState([]);
   const [anecdotes, setAnecdotes] = useState([]);
   const [polls, setPolls] = useState([]);

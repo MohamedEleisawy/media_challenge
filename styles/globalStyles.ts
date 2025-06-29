@@ -82,6 +82,8 @@ const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
+  flag: { position: 'absolute', top: -10, right: 10, color: '#35518A', zIndex: 1 },
+
 });
 
 export default globalStyles;

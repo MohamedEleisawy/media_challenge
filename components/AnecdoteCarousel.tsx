@@ -1,7 +1,9 @@
+import globalStyles from '@/styles/globalStyles';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { getAuth } from 'firebase/auth';
-import { collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { db } from '../firebaseConfig';
 
 const { width } = Dimensions.get('window');
@@ -16,30 +18,54 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
   const EMOJIS = ['🥰', '😂', '😯', '😢', '😡'];
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'anecdotes'), async (snapshot) => {
-      const anecdoteDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Mise à jour des anecdotes quand les props changent
+    if (initialAnecdotes && initialAnecdotes.length > 0) {
+      // Enrichir les anecdotes reçues en props avec les pseudos
+      const enrichAnecdotes = async () => {
+        const anecdotesWithPseudo = await Promise.all(initialAnecdotes.map(async (anecdote) => {
+          if (!anecdote.authorId) {
+            return { ...anecdote, pseudo: 'Inconnu' };
+          }
+          try {
+            const userDoc = await getDoc(doc(db, 'users', anecdote.authorId));
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            return { ...anecdote, pseudo: userData.pseudo || 'Inconnu' };
+          } catch (err) {
+            console.error('Erreur en récupérant le pseudo:', err);
+            return { ...anecdote, pseudo: 'Inconnu' };
+          }
+        }));
+        setAnecdotes(anecdotesWithPseudo);
+      };
 
-      // Récupérer les pseudos associés
-      const anecdotesWithPseudo = await Promise.all(anecdoteDocs.map(async (anecdote) => {
-        if (!anecdote.authorId) {
-          // Si pas d'authorId, on met "Inconnu"
-          return { ...anecdote, pseudo: 'Inconnu' };
-        }
-        try {
-          const userDoc = await getDoc(doc(db, 'users', anecdote.authorId));
-          const userData = userDoc.exists() ? userDoc.data() : {};
-          return { ...anecdote, pseudo: userData.pseudo || 'Inconnu' };
-        } catch (err) {
-          console.error('Erreur en récupérant le pseudo:', err);
-          return { ...anecdote, pseudo: 'Inconnu' };
-        }
-      }));
+      enrichAnecdotes();
+    } else {
+      // Si aucune anecdote n'est fournie en props, récupérer depuis Firestore
+      const unsubscribe = onSnapshot(collection(db, 'anecdotes'), async (snapshot) => {
+        const anecdoteDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      setAnecdotes(anecdotesWithPseudo);
-    });
+        // Récupérer les pseudos associés
+        const anecdotesWithPseudo = await Promise.all(anecdoteDocs.map(async (anecdote) => {
+          if (!anecdote.authorId) {
+            // Si pas d'authorId, on met "Inconnu"
+            return { ...anecdote, pseudo: 'Inconnu' };
+          }
+          try {
+            const userDoc = await getDoc(doc(db, 'users', anecdote.authorId));
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            return { ...anecdote, pseudo: userData.pseudo || 'Inconnu' };
+          } catch (err) {
+            console.error('Erreur en récupérant le pseudo:', err);
+            return { ...anecdote, pseudo: 'Inconnu' };
+          }
+        }));
 
-    return () => unsubscribe();
-  }, []);
+        setAnecdotes(anecdotesWithPseudo);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [initialAnecdotes]);
 
   const handleNext = () => {
     if (currentIndex < anecdotes.length - 1) {
@@ -63,7 +89,14 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
 
   const handleEmojiPress = async (anecdoteId, emoji) => {
     if (!user) {
-      console.log("User not authenticated");
+      // Affichage d'un message d'erreur si l'utilisateur n'est pas connecté
+      Alert.alert(
+        'Connexion requise', 
+        'Vous devez être connecté pour réagir aux anecdotes. Connectez-vous pour participer !',
+        [
+          { text: 'OK', style: 'default' }
+        ]
+      );
       return;
     }
 
@@ -89,6 +122,39 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
       console.log("Réaction mise à jour !");
     } catch (err) {
       console.error("Erreur lors de la mise à jour de la réaction :", err);
+      // Affichage d'un message d'erreur en cas de problème technique
+      Alert.alert(
+        'Erreur', 
+        'Impossible d\'enregistrer votre réaction. Veuillez réessayer.',
+        [
+          { text: 'OK', style: 'default' }
+        ]
+      );
+    }
+  };
+
+  const handleReport = async (anecdote) => {
+    if (!user) {
+      Alert.alert('Connexion requise', 'Vous devez être connecté pour signaler un contenu.');
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'reports'), {
+        type: 'anecdote',
+        contentId: anecdote.id,
+        contentText: anecdote.text,
+        authorId: anecdote.authorId,
+        authorPseudo: anecdote.pseudo,
+        reportedBy: user.uid,
+        reportedAt: new Date(),
+        status: 'pending'
+      });
+
+      Alert.alert('Signalement envoyé', 'L\'anecdote a été bien signalée. Merci de nous aider à maintenir une communauté respectueuse.');
+    } catch (error) {
+      console.error('Erreur signalement:', error);
+      Alert.alert('Erreur', 'Impossible d\'envoyer le signalement. Veuillez réessayer.');
     }
   };
 
@@ -97,7 +163,12 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
 
     return (
       <View style={styles.card}>
-        <Text style={styles.author}>👤{pseudo}</Text>
+        <View style={styles.authorRow}>
+          <Text style={styles.author}>👤{pseudo}</Text>
+          <TouchableOpacity onPress={() => handleReport(item)}>
+            <Ionicons name="flag" size={20} style={globalStyles.flag}/>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.text}>{item.text}</Text>
         <View style={styles.reactions}>
           {EMOJIS.map((emoji) => (
@@ -163,6 +234,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+  },
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 5,
   },
   author: { fontWeight: '600', marginBottom: 5 },
   text: { fontSize: 16, marginBottom: 10 },

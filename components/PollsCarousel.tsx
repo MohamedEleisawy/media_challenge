@@ -1,52 +1,90 @@
 import { Ionicons } from '@expo/vector-icons';
-import { collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { db } from '../firebaseConfig';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const PollsCarousel = ({ userId, onVote }) => {
+const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
   const scrollRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [polls, setPolls] = useState([]);
+  const [polls, setPolls] = useState(propPolls || []);
   const cardWidth = screenWidth - 64;
   const cardWithMargin = cardWidth + 24; // Include margin in calculation
 
+  // Mise à jour des polls quand les props changent
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'polls'), async (snapshot) => {
-      const pollDocs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-      const pollsWithPseudo = await Promise.all(
-        pollDocs.map(async (poll) => {
+    if (propPolls && propPolls.length > 0) {
+      // Enrichir les polls reçus en props avec les pseudos
+      const enrichPolls = async () => {
+        const pollsWithPseudo = await Promise.all(propPolls.map(async (poll) => {
+          if (!poll.authorId) {
+            return { ...poll, pseudo: 'Inconnu' };
+          }
           try {
             const userDoc = await getDoc(doc(db, 'users', poll.authorId));
             const userData = userDoc.exists() ? userDoc.data() : {};
-            const pseudo = typeof userData.pseudo === 'string' ? userData.pseudo : 'Inconnu';
-
-            return {
-              ...poll,
-              pseudo,
+            return { 
+              ...poll, 
+              pseudo: userData.pseudo || 'Inconnu',
               options: Array.isArray(poll.options) ? poll.options : [],
               voters: Array.isArray(poll.voters) ? poll.voters : [],
             };
           } catch (err) {
             console.error('Erreur en récupérant le pseudo:', err);
-            return {
-              ...poll,
+            return { 
+              ...poll, 
               pseudo: 'Inconnu',
               options: Array.isArray(poll.options) ? poll.options : [],
               voters: Array.isArray(poll.voters) ? poll.voters : [],
             };
           }
-        })
-      );
+        }));
+        setPolls(pollsWithPseudo);
+      };
 
-      setPolls(pollsWithPseudo);
-    });
+      enrichPolls();
+    }
+  }, [propPolls]);
 
-    return () => unsubscribe();
-  }, []);
+  useEffect(() => {
+    // Si aucun poll n'est fourni en props, récupérer depuis Firestore
+    if (!propPolls || propPolls.length === 0) {
+      const unsubscribe = onSnapshot(collection(db, 'polls'), async (snapshot) => {
+        const pollDocs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        const pollsWithPseudo = await Promise.all(
+          pollDocs.map(async (poll) => {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', poll.authorId));
+              const userData = userDoc.exists() ? userDoc.data() : {};
+              const pseudo = typeof userData.pseudo === 'string' ? userData.pseudo : 'Inconnu';
+
+              return {
+                ...poll,
+                pseudo,
+                options: Array.isArray(poll.options) ? poll.options : [],
+                voters: Array.isArray(poll.voters) ? poll.voters : [],
+              };
+            } catch (err) {
+              console.error('Erreur en récupérant le pseudo:', err);
+              return {
+                ...poll,
+                pseudo: 'Inconnu',
+                options: Array.isArray(poll.options) ? poll.options : [],
+                voters: Array.isArray(poll.voters) ? poll.voters : [],
+              };
+            }
+          })
+        );
+
+        setPolls(pollsWithPseudo);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [propPolls]);
 
   const onScroll = (event) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -65,6 +103,31 @@ const PollsCarousel = ({ userId, onVote }) => {
 
   const handlePrev = () => {
     if (currentIndex > 0) scrollToIndex(currentIndex - 1);
+  };
+
+  const handleReport = async (poll) => {
+    if (!userId) {
+      Alert.alert('Connexion requise', 'Vous devez être connecté pour signaler un contenu.');
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'reports'), {
+        type: 'poll',
+        contentId: poll.id,
+        contentText: poll.question,
+        authorId: poll.authorId,
+        authorPseudo: poll.pseudo,
+        reportedBy: userId,
+        reportedAt: new Date(),
+        status: 'pending'
+      });
+
+      Alert.alert('Signalement envoyé', 'Le sondage a été bien signalé. Merci de nous aider à maintenir une communauté respectueuse.');
+    } catch (error) {
+      console.error('Erreur signalement:', error);
+      Alert.alert('Erreur', 'Impossible d\'envoyer le signalement. Veuillez réessayer.');
+    }
   };
 
   return (
@@ -88,11 +151,19 @@ const PollsCarousel = ({ userId, onVote }) => {
                 <View style={styles.authorRow}>
                   <Text style={styles.authorIcon}>👤</Text>
                   <Text style={styles.author}>{poll.pseudo}</Text>
+                  <TouchableOpacity onPress={() => handleReport(poll)}>
+                    <Ionicons name="flag" size={20} style={styles.flag} />
+                  </TouchableOpacity>
                 </View>
               </View>
               <Text style={styles.pollQuestion}>{poll.question}</Text>
               
-              {hasVoted || !userId ? (
+              {/* Logique conditionnelle inspirée de polls.tsx */}
+              {!userId ? (
+                // Utilisateur non connecté : masquer les résultats
+                <Text style={styles.loginNote}>🔒 Connecte-toi pour voir les résultats et voter.</Text>
+              ) : hasVoted ? (
+                // Utilisateur connecté qui a déjà voté : afficher les résultats
                 <View style={styles.chartContainer}>
                   <View style={styles.progressRow}>
                     {poll.options.map((option, index) => {
@@ -132,6 +203,7 @@ const PollsCarousel = ({ userId, onVote }) => {
                   </View>
                 </View>
               ) : (
+                // Utilisateur connecté qui n'a pas encore voté : afficher les boutons de vote
                 <View style={styles.voteButtons}>
                   {poll.options.map((option) => (
                     <TouchableOpacity
@@ -143,10 +215,6 @@ const PollsCarousel = ({ userId, onVote }) => {
                     </TouchableOpacity>
                   ))}
                 </View>
-              )}
-
-              {!userId && (
-                <Text style={styles.loginNote}>🔒 Connecte-toi pour voir les résultats et voter.</Text>
               )}
             </View>
           );
@@ -221,6 +289,7 @@ const styles = StyleSheet.create({
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   authorIcon: {
     fontSize: 18,
@@ -229,6 +298,7 @@ const styles = StyleSheet.create({
   author: {
     fontWeight: 'bold',
     color: '#142A63',
+    flex: 1,
   },
   pollQuestion: {
     fontSize: 15,
@@ -306,6 +376,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4A90E2',
+  },
+  flag: {
+    color: '#35518A',
+    marginLeft: 'auto',
   },
 });
 

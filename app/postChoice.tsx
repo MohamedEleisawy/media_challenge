@@ -6,14 +6,6 @@ export default function PostChoiceScreen() {
   const [choiceMade, setChoiceMade] = useState(null);
   const router = useRouter();
 
-  const handleChoice = (choice: 'anecdote' | 'sondage') => {
-    setChoiceMade(choice);
-    if (choice === 'anecdote') {
-      router.push('/postAnecdotes');
-    } else {
-      router.push('/postPolls');
-    }
-  };
 
   return (
     <View style={styles.container}>

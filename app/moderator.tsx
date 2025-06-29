@@ -1,19 +1,24 @@
+import { useRouter } from 'expo-router';
+import { collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../authContext';
 import { db } from '../firebaseConfig';
-import { useRouter } from 'expo-router';
 
 export default function ModeratorPage() {
+  // État pour gérer l'utilisateur connecté et son rôle
   const { user, userRole } = useAuth();
+  
+  // États pour stocker les données récupérées depuis Firestore
   const [anecdotes, setAnecdotes] = useState([]);
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Vérification des permissions et chargement initial des données
   useEffect(() => {
     const checkModeratorAccess = async () => {
+      // Contrôle d'accès : seuls les admins et modérateurs peuvent accéder
       if (!user || !['admin', 'moderateur'].includes(userRole)) {
         Alert.alert('Accès refusé', 'Vous n\'avez pas les permissions de modération.');
         router.replace('/profil');
@@ -26,16 +31,20 @@ export default function ModeratorPage() {
     checkModeratorAccess();
   }, [user, userRole]);
 
+  // Récupération de tous les contenus (anecdotes et sondages) avec les pseudos des auteurs
   const fetchContent = async () => {
     try {
-      // Récupérer toutes les anecdotes avec pseudo
+      // Récupération simultanée des anecdotes et des utilisateurs
       const anecdotesSnapshot = await getDocs(collection(db, 'anecdotes'));
       const usersSnapshot = await getDocs(collection(db, 'users'));
+      
+      // Transformation des utilisateurs en objet pour un accès rapide par ID
       const usersData = usersSnapshot.docs.reduce((acc, doc) => {
         acc[doc.id] = doc.data();
         return acc;
       }, {});
 
+      // Enrichissement des anecdotes avec le pseudo de l'auteur
       const anecdotesList = anecdotesSnapshot.docs.map(doc => {
         const data = { id: doc.id, ...doc.data() };
         return {
@@ -45,7 +54,7 @@ export default function ModeratorPage() {
       });
       setAnecdotes(anecdotesList);
 
-      // Récupérer tous les sondages avec pseudo
+      // Même processus pour les sondages
       const pollsSnapshot = await getDocs(collection(db, 'polls'));
       const pollsList = pollsSnapshot.docs.map(doc => {
         const data = { id: doc.id, ...doc.data() };
@@ -63,7 +72,9 @@ export default function ModeratorPage() {
     }
   };
 
+  // Fonction de suppression de contenu avec confirmation
   const deleteContent = async (collectionName, id, type) => {
+    // Double confirmation avant suppression définitive
     Alert.alert(
       'Modération',
       `Supprimer ${type} ?`,
@@ -74,8 +85,10 @@ export default function ModeratorPage() {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Suppression du document dans Firestore
               await deleteDoc(doc(db, collectionName, id));
               Alert.alert('Succès', `${type} supprimé`);
+              // Rechargement des données pour mettre à jour l'affichage
               await fetchContent();
             } catch (error) {
               Alert.alert('Erreur', `Impossible de supprimer ${type}`);
@@ -86,6 +99,7 @@ export default function ModeratorPage() {
     );
   };
 
+  // Affichage du loader pendant le chargement
   if (loading) {
     return (
       <View style={styles.loading}>
@@ -98,7 +112,12 @@ export default function ModeratorPage() {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>🛡️ Modération</Text>
 
-      {/* Anecdotes à modérer */}
+      {/* Bouton d'accès aux signalements */}
+      <TouchableOpacity style={styles.reportsButton} onPress={() => router.push('/reports')}>
+        <Text style={styles.reportsButtonText}>🚨 Voir les signalements</Text>
+      </TouchableOpacity>
+
+      {/* Section de modération des anecdotes */}
       <Text style={styles.sectionTitle}>📝 Anecdotes ({anecdotes.length})</Text>
       {anecdotes.map((anecdote) => (
         <View key={anecdote.id} style={styles.contentCard}>
@@ -107,6 +126,7 @@ export default function ModeratorPage() {
           <Text style={styles.date}>
             {anecdote.createdAt ? new Date(anecdote.createdAt.seconds * 1000).toLocaleDateString() : 'Date inconnue'}
           </Text>
+          {/* Bouton de suppression avec confirmation */}
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => deleteContent('anecdotes', anecdote.id, 'cette anecdote')}
@@ -116,7 +136,7 @@ export default function ModeratorPage() {
         </View>
       ))}
 
-      {/* Sondages à modérer */}
+      {/* Section de modération des sondages */}
       <Text style={styles.sectionTitle}>📊 Sondages ({polls.length})</Text>
       {polls.map((poll) => (
         <View key={poll.id} style={styles.contentCard}>
@@ -134,6 +154,7 @@ export default function ModeratorPage() {
         </View>
       ))}
 
+      {/* Bouton de retour */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>← Retour au profil</Text>
       </TouchableOpacity>
@@ -153,6 +174,17 @@ const styles = StyleSheet.create({
   deleteButton: { backgroundColor: '#f44336', padding: 10, borderRadius: 6, alignSelf: 'flex-end' },
   deleteButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14 },
   backButton: { backgroundColor: '#00235B', padding: 15, borderRadius: 8, marginTop: 20, marginBottom: 40 },
-  backButtonText: { color: 'white', textAlign: 'center', fontSize: 16, fontWeight: 'bold' }
+  backButtonText: { color: 'white', textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
+  reportsButton: { 
+    backgroundColor: '#ff6b6b', 
+    padding: 15, 
+    borderRadius: 8, 
+    marginBottom: 20,
+    alignItems: 'center'
+  },
+  reportsButtonText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  },
 });
- 
