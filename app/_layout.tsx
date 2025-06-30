@@ -1,7 +1,7 @@
 import { Slot } from 'expo-router';
 import { AuthProvider } from '../authContext';
 import { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, useColorScheme } from 'react-native';
 import SplashScreen from '../components/SplashScreen';
 import Navbar from '../components/Navbar';
 import Toast from 'react-native-toast-message';
@@ -10,6 +10,9 @@ import Footer from '@/components/Footer';
 
 export default function Layout() {
   const [loading, setLoading] = useState(true);
+  const colorScheme = useColorScheme(); // 👈 récupère le thème de l'appareil
+
+  const isDarkMode = colorScheme === 'dark';
 
   const [fontsLoaded] = useFonts({
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
@@ -28,7 +31,7 @@ export default function Layout() {
 
   return (
     <AuthProvider>
-      <View style={styles.page}>
+      <View style={[styles.page, { backgroundColor: isDarkMode ? '#373737' : '#fff' }]}>
         <Navbar />
         <ScrollView contentContainerStyle={styles.content}>
           <Slot />
@@ -43,29 +46,28 @@ export default function Layout() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#fff',
-    position: 'relative', // nécessaire pour le positionnement absolu du footer
+    position: 'relative',
   },
   content: {
-    paddingBottom: 120, // assez d'espace pour laisser la place au footer fixé
-    flexGrow: 1, // permet au contenu de pousser le ScrollView si besoin
+    paddingBottom: 120,
+    flexGrow: 1,
   },
   centerButton: {
-  position: 'absolute',
-  bottom: 40,           // remonte un peu au-dessus du footer
-  alignSelf: 'center',  // centre horizontalement
-  backgroundColor: '#00235B',
-  borderRadius: 50,
-  padding: 10,
-  borderWidth: 4,
-  borderColor: '#7595C7',
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.3,
-  shadowRadius: 6,
-  elevation: 10,
-  zIndex: 20,
-},
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    backgroundColor: '#00235B',
+    borderRadius: 50,
+    padding: 10,
+    borderWidth: 4,
+    borderColor: '#7595C7',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 10,
+    zIndex: 20,
+  },
   footerContainer: {
     position: 'absolute',
     bottom: 0,
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: '#00235B',
-    paddingTop: 25,
+    paddingTop: 28,
     paddingBottom: 5,
     borderTopWidth: 2,
     borderTopColor: '#7595C7',
@@ -89,7 +91,5 @@ const styles = StyleSheet.create({
   },
   home: {
     paddingBottom: 20,
-  }
-  // tes autres styles...
+  },
 });
-

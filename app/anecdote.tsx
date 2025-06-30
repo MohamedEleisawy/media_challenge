@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, LogBox } from 'react-native';
-import { db } from '../firebaseConfig';
-import { doc, updateDoc, onSnapshot, collection, getDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 import globalStyles from '@/styles/globalStyles';
+import { getAuth } from 'firebase/auth';
+import { collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { FlatList, LogBox, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { db } from '../firebaseConfig';
 
 const Anecdote = () => {
     useEffect(() => {
@@ -92,11 +92,13 @@ const Anecdote = () => {
                     {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
                         <TouchableOpacity
                             key={emoji}
-                            style={styles.emojiButton}
+                            style={styles.emojiContainer}
                             onPress={() => handleEmojiPress(item.id, emoji)}
                             activeOpacity={0.7}
                         >
-                            <Text style={styles.emoji}>{emoji}</Text>
+                            <View style={styles.emojiButton}>
+                                <Text style={styles.emoji}>{emoji}</Text>
+                            </View>
                             <Text style={styles.reactionCount}>
                                 {Array.isArray(item.reactions?.[emoji]) ? item.reactions[emoji].length : 0}
                             </Text>
@@ -192,21 +194,22 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         marginTop: 4,
     },
-    emojiButton: {
-        flexDirection: 'row',
+    emojiContainer: {
         alignItems: 'center',
+        marginRight: 8,
+    },
+    emojiButton: {
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 20,
         backgroundColor: '#E5ECFA',
-        marginRight: 8,
+        marginBottom: 2,
     },
     emoji: {
         fontSize: 18,
     },
     reactionCount: {
-        marginLeft: 4,
-        fontSize: 13,
+        fontSize: 10,
         color: '#35518A',
         fontWeight: '500',
     },

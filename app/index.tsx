@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 import { collection, getDocs, query, orderBy, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import HeaderComponent from '@/components/HeaderComponent';
-import globalStyles from '@/styles/globalStyles';
 import AnecdoteCarousel from '@/components/AnecdoteCarousel';
+import PollsCarousel from '@/components/PollsCarousel';
 import { useRouter } from 'expo-router';
 
 export default function Home() {
@@ -16,9 +24,11 @@ export default function Home() {
   const [user, setUser] = useState(null);
 
   const auth = getAuth();
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
     return () => unsubscribe();
@@ -34,8 +44,8 @@ export default function Home() {
         getDocs(pollQuery),
       ]);
 
-      const anecdotesData = anecdoteSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const pollsData = pollSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const anecdotesData = anecdoteSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const pollsData = pollSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
       setAnecdotes(anecdotesData);
       setPolls(pollsData);
@@ -53,14 +63,13 @@ export default function Home() {
   const handleVote = async (pollId, optionId) => {
     try {
       const pollRef = doc(db, 'polls', pollId);
-      const poll = polls.find(p => p.id === pollId);
+      const poll = polls.find((p) => p.id === pollId);
 
       if (!user || !poll || poll.voters?.includes(user.uid)) return;
 
-      const updatedOptions = poll.options.map(opt =>
+      const updatedOptions = poll.options.map((opt) =>
         opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
       );
-
       const updatedVoters = [...(poll.voters || []), user.uid];
 
       await updateDoc(pollRef, {
@@ -68,8 +77,8 @@ export default function Home() {
         voters: updatedVoters,
       });
 
-      setPolls(prev =>
-        prev.map(p =>
+      setPolls((prev) =>
+        prev.map((p) =>
           p.id === pollId ? { ...p, options: updatedOptions, voters: updatedVoters } : p
         )
       );
@@ -81,78 +90,50 @@ export default function Home() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#555" />
+        <ActivityIndicator size="large" color="#bcd3ff" />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: isDarkMode ? '#1c1c1c' : '#ffffff' }]}>
       <HeaderComponent />
-      <TouchableOpacity style={globalStyles.section} onPress={() => Linking.openURL('https://www.mes-allocs.fr/guides/aides-sociales/')}>
-        <Text style={globalStyles.sectionTitle}>Envie d'en parler ?</Text>
+
+      <TouchableOpacity style={styles.talkCard} onPress={() => router.push('/postChoice')}>
+        <Text style={styles.talkText}>Envie d'en parler ?</Text>
       </TouchableOpacity>
 
-      <View style={globalStyles.containerButton}>
-        <Text style={globalStyles.TitleBlue}>Top</Text>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>anecdotes</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Top</Text>
+        <View style={styles.sectionTag}>
+          <Text style={styles.sectionTagText}>anecdotes</Text>
         </View>
       </View>
+
       <AnecdoteCarousel anecdotes={anecdotes.slice(0, 5)} />
-      <TouchableOpacity
-        style={globalStyles.section}
-        onPress={() => router.push('/anecdote')}
-      >
-        <Text style={globalStyles.sectionTitle}>Voir toutes les anecdotes</Text>
+
+      <TouchableOpacity style={styles.linkCard} onPress={() => router.push('/anecdote')}>
+        <Text style={styles.linkText}>Voir toutes les anecdotes</Text>
       </TouchableOpacity>
 
-      <View style={globalStyles.containerButton}>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>Sondage</Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTag}>
+          <Text style={styles.sectionTagText}>Sondage</Text>
         </View>
       </View>
-      {polls.length === 0 ? (
-        <Text style={styles.noData}>Aucun sondage pour le moment.</Text>
-      ) : (
-        polls.map(poll => {
-          const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
-          const alreadyVoted = poll.voters?.includes(user?.uid);
 
-          return (
-            <View key={poll.id} style={styles.card}>
-              <Text style={styles.author}>🗣️ {poll.author}</Text>
-              <Text style={styles.text}>{poll.question}</Text>
+      <PollsCarousel polls={polls} userId={user?.uid} onVote={handleVote} />
 
-              {user ? (
-                poll.options.map(option => {
-                  const percent = totalVotes ? ((option.votes / totalVotes) * 100).toFixed(1) : '0';
-                  return (
-                    <View key={option.id} style={styles.optionContainer}>
-                      {alreadyVoted ? (
-                        <Text style={styles.votedText}>✔️ {option.text} - {option.votes} votes ({percent}%)</Text>
-                      ) : (
-                        <TouchableOpacity onPress={() => handleVote(poll.id, option.id)}>
-                          <Text style={styles.voteButton}>🗳️ {option.text}</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  );
-                })
-              ) : (
-                <Text style={styles.votedText}>🔒 Connecte-toi pour voter</Text>
-              )}
-            </View>
-          );
-        })
-      )}
-
-      <TouchableOpacity style={globalStyles.section} >
-        <Text style={globalStyles.sectionTitle}>Suivez nos actualités</Text>
+      <TouchableOpacity style={styles.linkCard} onPress={() => router.push('/polls')}>
+        <Text style={styles.linkText}>Voir tous les sondages</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={globalStyles.section}>
-        <Text style={globalStyles.sectionTitle}>Abonnez-vous à la newsletter</Text>
+      <TouchableOpacity style={styles.linkCard} onPress={() => router.push('/help')}>
+        <Text style={styles.linkText}>Tu as besoin d’aide ? ❤️‍🩹</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.linkCard} onPress={() => router.push('/news')}>
+        <Text style={styles.linkText}>Reste informée 🗞️</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -161,49 +142,58 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 20,
+    padding: 16,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1c1c1c',
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  talkCard: {
+    backgroundColor: '#bcd3ff',
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginBottom: 24,
+    alignItems: 'center',
   },
-  noData: {
-    textAlign: 'center',
-    color: '#888',
-  },
-  card: {
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    shadowColor: '#ccc',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  author: {
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-  text: {
+  talkText: {
+    color: '#1c1c1c',
     fontSize: 16,
-    marginBottom: 10,
+    fontWeight: '600',
   },
-  optionContainer: {
-    marginBottom: 8,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  voteButton: {
-    color: '#007bff',
-    fontWeight: 'bold',
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginRight: 10,
   },
-  votedText: {
-    color: '#555',
+  sectionTag: {
+    backgroundColor: '#bcd3ff',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  sectionTagText: {
+    color: '#1c1c1c',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  linkCard: {
+    backgroundColor: '#2e2e2e',
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

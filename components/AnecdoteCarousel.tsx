@@ -1,25 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  FlatList,
-} from 'react-native';
-import { db } from '../firebaseConfig';
-import {
-  doc,
-  updateDoc,
-  onSnapshot,
-  collection,
-  getDoc,
-} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { db } from '../firebaseConfig';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 50;
 const EMOJIS = ['🥰', '😂', '😯', '😢', '😡'];
+const getItemLayout = (_data, index) => ({
+  length: CARD_WIDTH + 40, // correspond à la largeur d'un "card" + margin
+  offset: (CARD_WIDTH + 40) * index,
+  index,
+});
 
 export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -98,32 +90,30 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.author}>👤 {item.pseudo || 'Inconnu'}</Text>
-      <Text style={styles.text}>{item.text}</Text>
-      <View style={styles.reactions}>
-        {EMOJIS.map((emoji) => (
-          <TouchableOpacity
-            key={emoji}
-            style={styles.emojiButton}
-            onPress={() => handleEmojiPress(item.id, emoji)}
-          >
-            <Text style={styles.emoji}>{emoji}</Text>
-            <Text style={styles.reactionCount}>
-              {item.reactions?.[emoji]?.length || 0}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
+  const renderItem = ({ item }) => {
+    const pseudo = typeof item.pseudo === 'string' ? item.pseudo : 'Inconnu';
 
-  const getItemLayout = (_, index) => ({
-    length: CARD_WIDTH + 40,
-    offset: (CARD_WIDTH + 40) * index,
-    index,
-  });
+    return (
+      <View style={styles.card}>
+        <Text style={styles.author}>👤{pseudo}</Text>
+        <Text style={styles.text}>{item.text}</Text>
+        <View style={styles.reactions}>
+          {EMOJIS.map((emoji) => (
+            <TouchableOpacity
+              key={emoji}
+              style={styles.emojiContainer}
+              onPress={() => handleEmojiPress(item.id, emoji)}
+            >
+              <View style={styles.emojiButton}>
+                <Text style={styles.emoji}>{emoji}</Text>
+              </View>
+              <Text style={styles.reactionCount}>{item.reactions?.[emoji]?.length || 0}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.carouselContainer}>
@@ -175,7 +165,7 @@ const styles = StyleSheet.create({
     height: 200,
     width: CARD_WIDTH,
     marginHorizontal: 20,
-    backgroundColor: 'rgba(254, 242, 186, 0.34)',
+    backgroundColor: 'rgba(254, 242, 186)',
     borderRadius: 10,
     padding: 16,
     marginLeft: 18,
@@ -186,26 +176,12 @@ const styles = StyleSheet.create({
   },
   author: { fontWeight: '600', marginBottom: 5 },
   text: { fontSize: 16, marginBottom: 10 },
-  reactions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  emojiButton: {
-    padding: 6,
-    borderRadius: 25,
-    backgroundColor: '#7595C7',
-    marginHorizontal: 6,
-    alignItems: 'center',
-  },
+  reactions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  emojiContainer: { alignItems: 'center', marginHorizontal: 6 },
+  emojiButton: { padding: 6, borderRadius: 25, backgroundColor: '#7595C7', marginBottom: 2 },
   emoji: { fontSize: 16 },
-  reactionCount: { fontSize: 12, color: '#000' },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
+  reactionCount: { fontSize: 10, color: '#000', fontWeight: '500' },
+  buttonRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 },
   navButton: { padding: 10 },
   buttonText: { fontSize: 24 },
   pagination: { fontSize: 16, marginHorizontal: 12 },
