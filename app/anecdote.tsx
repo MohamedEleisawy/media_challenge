@@ -1,4 +1,5 @@
-import globalStyles from '@/styles/globalStyles';
+import { useTheme } from '@/components/ui/Theme';
+import { useGlobalStyles } from '@/styles/globalStyles';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { getAuth } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -7,6 +8,8 @@ import { Alert, FlatList, LogBox, StyleSheet, Text, TouchableOpacity, View } fro
 import { db } from '../firebaseConfig';
 
 const Anecdote = () => {
+    const theme = useTheme();
+    const globalStyles = useGlobalStyles();
     useEffect(() => {
         LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
     }, []);
@@ -126,15 +129,15 @@ const Anecdote = () => {
         const pseudo = typeof item.pseudo === 'string' ? item.pseudo : 'Inconnu';
 
         return (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: theme.anecdoteCard }]}>
                 <View style={styles.authorRow}>
-                    <Text style={styles.authorIcon}>👤</Text>
+                    <Text style={[styles.authorIcon, { color: theme.text }]}>👤</Text>
+                    <Text style={[styles.author, { color: theme.primary }]}>{pseudo}</Text>
                     <TouchableOpacity onPress={() => handleReport(item)}>
-                        <Ionicons name="flag" size={25} style={styles.flag} />
+                        <Ionicons name="flag" size={25} style={[styles.flag, { color: theme.primary }]} />
                     </TouchableOpacity>
-                    <Text style={styles.author}>{pseudo}</Text>
                 </View>
-                <Text style={styles.text}>{item.text}</Text>
+                <Text style={[styles.text, { color: theme.text }]}>{item.text}</Text>
                 <View style={styles.reactions}>
                     {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
                         <TouchableOpacity
@@ -143,10 +146,10 @@ const Anecdote = () => {
                             onPress={() => handleEmojiPress(item.id, emoji)}
                             activeOpacity={0.7}
                         >
-                            <View style={styles.emojiButton}>
+                            <View style={[styles.emojiButton, { backgroundColor: theme.emojiButton }]}>
                                 <Text style={styles.emoji}>{emoji}</Text>
                             </View>
-                            <Text style={styles.reactionCount}>
+                            <Text style={[styles.reactionCount, { color: theme.primary }]}>
                                 {Array.isArray(item.reactions?.[emoji]) ? item.reactions[emoji].length : 0}
                             </Text>
                         </TouchableOpacity>
@@ -157,7 +160,7 @@ const Anecdote = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={globalStyles.containerButton}>
                 <Text style={globalStyles.TitleBlue}>Toutes les</Text>
                 <View style={globalStyles.containerButtonBlue}>
@@ -166,7 +169,39 @@ const Anecdote = () => {
             </View>
             <FlatList
                 data={anecdotes}
-                renderItem={renderItem}
+                renderItem={({ item }) => {
+                    const pseudo = typeof item.pseudo === 'string' ? item.pseudo : 'Inconnu';
+
+                    return (
+                        <View style={[styles.card, { backgroundColor: theme.anecdoteCard }]}>
+                            <View style={styles.authorRow}>
+                                <Text style={[styles.authorIcon, { color: theme.text }]}>👤</Text>
+                                <Text style={[styles.author, { color: theme.primary }]}>{pseudo}</Text>
+                                <TouchableOpacity onPress={() => handleReport(item)}>
+                                    <Ionicons name="flag" size={25} style={[styles.flag, { color: theme.primary }]} />
+                                </TouchableOpacity>
+                            </View>
+                            <Text style={[styles.text, { color: theme.text }]}>{item.text}</Text>
+                            <View style={styles.reactions}>
+                                {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
+                                    <TouchableOpacity
+                                        key={emoji}
+                                        style={styles.emojiContainer}
+                                        onPress={() => handleEmojiPress(item.id, emoji)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={[styles.emojiButton, { backgroundColor: theme.emojiButton }]}>
+                                            <Text style={styles.emoji}>{emoji}</Text>
+                                        </View>
+                                        <Text style={[styles.reactionCount, { color: theme.primary }]}>
+                                            {Array.isArray(item.reactions?.[emoji]) ? item.reactions[emoji].length : 0}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    );
+                }}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
             />
@@ -178,7 +213,6 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
         flex: 1,
-        backgroundColor: '#fff',
     },
     headerRow: {
         flexDirection: 'row',
@@ -207,11 +241,10 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     card: {
-        backgroundColor: 'rgba(254, 242, 186, 0.34)',
         borderRadius: 14,
         padding: 16,
         marginBottom: 14,
-        shadowColor: '#ccc',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
@@ -229,12 +262,10 @@ const styles = StyleSheet.create({
     author: {
         fontWeight: 'bold',
         fontSize: 15,
-        color: '#35518A',
     },
     text: {
         fontSize: 16,
         marginBottom: 12,
-        color: '#222',
     },
     reactions: {
         flexDirection: 'row',
@@ -249,7 +280,6 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 20,
-        backgroundColor: '#E5ECFA',
         marginBottom: 2,
     },
     emoji: {
@@ -257,14 +287,12 @@ const styles = StyleSheet.create({
     },
     reactionCount: {
         fontSize: 10,
-        color: '#35518A',
         fontWeight: '500',
     },
     flag: {
         position: 'absolute',
-        left: 270,
-        top: -10,
-        color: '#35518A',
+        left: 180,
+        top: -0,
         zIndex: 1,
     },
 });

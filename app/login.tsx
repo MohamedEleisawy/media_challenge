@@ -1,32 +1,14 @@
-import { yupResolver } from '@hookform/resolvers/yup';
-import { Link, useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import React from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Toast from 'react-native-toast-message';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
 import * as Yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
+import Toast from 'react-native-toast-message';
+import { useRouter, Link } from 'expo-router';
+import { useTheme } from '@/components/ui/Theme';
 
-// 🔧 Fonction de gestion des erreurs Firebase spécifiques à la connexion
-function getFirebaseAuthErrorMessage(errorCode: string) {
-  switch (errorCode) {
-    case 'auth/invalid-email':
-      return "L'adresse email est invalide.";
-    case 'auth/user-disabled':
-      return "Ce compte a été désactivé.";
-    case 'auth/user-not-found':
-      return "Aucun utilisateur trouvé avec cet email.";
-    case 'auth/wrong-password':
-      return "Mot de passe incorrect.";
-    case 'auth/too-many-requests':
-      return "Trop de tentatives. Réessayez plus tard.";
-    default:
-      return "Une erreur est survenue. Veuillez réessayer.";
-  }
-}
-
-// ✅ Schéma de validation pour les champs de connexion
 const schema = Yup.object().shape({
   email: Yup.string().email("Email invalide").required("L'email est requis"),
   password: Yup.string().min(6, "Minimum 6 caractères").required("Mot de passe requis"),
@@ -34,104 +16,150 @@ const schema = Yup.object().shape({
 
 export default function LoginScreen() {
   const router = useRouter();
-
-  // Configuration du formulaire avec validation
+  const theme = useTheme();
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
+  } = useForm({ resolver: yupResolver(schema) });
 
-  // Fonction de traitement de la connexion
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
-      // Authentification avec Firebase Auth
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      
-      // Notification de succès
-      Toast.show({
-        type: 'success',
-        text1: '✅ Connexion réussie',
-      });
-      
-      // Redirection vers la page d'accueil après connexion
+      Toast.show({ type: 'success', text1: '✅ Connexion réussie' });
       router.replace('/');
     } catch (error: any) {
-      // Gestion des erreurs avec messages personnalisés
-      const message = getFirebaseAuthErrorMessage(error.code || '');
       Toast.show({
         type: 'error',
         text1: 'Erreur de connexion',
-        text2: message,
+        text2: "Vérifie tes identifiants ou réessaie plus tard.",
       });
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Connexion</Text>
-
-      {/* Champ Email avec validation */}
+    <View style={[styles.formBlock, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+      {/* Email */}
+      <Text style={[styles.label, { color: theme.text }]}>Email</Text>
       <Controller
         control={control}
         name="email"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            placeholder="Email"
+            placeholder="contrepoint@gmail.com"
+            placeholderTextColor={theme.textSecondary}
             value={value}
             onChangeText={onChange}
             autoCapitalize="none"
             keyboardType="email-address"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.emojiButton, borderColor: theme.border, color: theme.text }]}
           />
         )}
       />
       {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
-      {/* Champ Mot de passe avec validation */}
+      {/* Mot de passe */}
+      <Text style={[styles.label, { color: theme.text }]}>Mot de passe</Text>
       <Controller
         control={control}
         name="password"
         render={({ field: { onChange, value } }) => (
           <TextInput
-            placeholder="Mot de passe"
+            placeholder="monmotdepasse"
+            placeholderTextColor={theme.textSecondary}
             value={value}
             onChangeText={onChange}
             secureTextEntry
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.emojiButton, borderColor: theme.border, color: theme.text }]}
           />
         )}
       />
       {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
 
-      {/* Bouton de connexion */}
-      <Button title="Se connecter" onPress={handleSubmit(onSubmit)} />
+      {/* Bouton Connexion */}
+      <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSubmit(onSubmit)}>
+        <Text style={styles.buttonText}>Se connecter</Text>
+      </TouchableOpacity>
 
-      {/* Liens utiles : mot de passe oublié et inscription */}
+      {/* Lien mot de passe oublié */}
       <Link href="/forgotPassword" asChild>
-        <TouchableOpacity style={styles.link}>
-          <Text style={styles.linkText}>🔁 Mot de passe oublié ?</Text>
+        <TouchableOpacity>
+          <Text style={[styles.forgotLink, { color: theme.primary }]}>Mot de passe oublié ?</Text>
         </TouchableOpacity>
       </Link>
 
-      <View style={styles.signupContainer}>
-        <Text>Pas de compte ?</Text>
-        <Link href="/signup" asChild>
-          <Text style={styles.linkText}>Inscris-toi maintenant !</Text>
-        </Link>
-      </View>
+      {/* Lien inscription */}
+      <Text style={[styles.signupText, { color: theme.textSecondary }]}>
+        Pas de compte ? <Text style={[styles.signupLink, { color: theme.primary }]}>Inscris-toi maintenant !</Text>
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  title: { fontSize: 24, marginBottom: 20, fontWeight: 'bold' },
-  input: { borderBottomWidth: 1, marginBottom: 10, padding: 8 },
-  error: { color: 'red', marginBottom: 8 },
-  link: { marginTop: 15, alignItems: 'center' },
-  linkText: { color: '#007bff', marginTop: 5 },
-  signupContainer: { marginTop: 20, alignItems: 'center' },
+  formBlock: {
+    borderRadius: 12,
+    padding: 18,
+    marginHorizontal: 20,
+    marginTop: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  label: {
+    fontSize: 15,
+    marginBottom: 4,
+    fontFamily: 'Nunito-Bold',
+  },
+  input: {
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    fontStyle: 'italic',
+    fontSize: 15,
+    fontFamily: 'Nunito-Regular',
+    borderWidth: 1,
+  },
+  button: {
+    borderRadius: 7,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontFamily: 'Nunito-Bold',
+    fontSize: 16,
+  },
+  forgotLink: {
+    textDecorationLine: 'underline',
+    fontSize: 14,
+    marginTop: 2,
+    marginBottom: 2,
+    fontFamily: 'Nunito-Regular',
+    textAlign: 'left',
+  },
+  error: {
+    color: '#D32F2F',
+    fontSize: 13,
+    marginBottom: 4,
+    fontFamily: 'Nunito-Regular',
+  },
+  signupText: {
+    fontStyle: 'italic',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 10,
+    fontFamily: 'Nunito-Regular',
+  },
+  signupLink: {
+    textDecorationLine: 'underline',
+    fontFamily: 'Nunito-Bold',
+  },
 });
+  

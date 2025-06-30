@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { useTheme } from '@/components/ui/Theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { confirmPasswordReset } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { auth } from '../firebaseConfig';
 
 export default function ResetPasswordScreen() {
   const { oobCode } = useLocalSearchParams();
   const router = useRouter();
+  const theme = useTheme();
 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,15 +60,16 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Réinitialiser le mot de passe</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Réinitialiser le mot de passe</Text>
 
       <TextInput
         placeholder="Nouveau mot de passe"
+        placeholderTextColor={theme.textSecondary}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
+        style={[styles.input, { borderColor: theme.border, color: theme.text }]}
       />
 
       <Button
@@ -81,5 +84,5 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 20 },
   title: { fontSize: 22, marginBottom: 20, fontWeight: 'bold', textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 },
+  input: { borderWidth: 1, padding: 10, marginBottom: 15, borderRadius: 5 },
 });

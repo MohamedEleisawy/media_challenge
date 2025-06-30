@@ -4,8 +4,10 @@ import { db } from '../firebaseConfig';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
+import { useTheme } from '@/components/ui/Theme';
 
 export default function PostPollScreen() {
+  const theme = useTheme();
   const [sondage, setSondage] = useState('');
   const [checks, setChecks] = useState([false, false, false]);
   const [choice, setChoice] = useState(null);
@@ -70,23 +72,24 @@ export default function PostPollScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.header}>Fais un sondage !</Text>
-      <Text style={styles.subHeader}>Sois concis et surtout reste dans le respect de tous !</Text>
-      <View style={styles.card}>
+    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+      <Text style={[styles.header, { color: theme.text }]}>Fais un sondage !</Text>
+      <Text style={[styles.subHeader, { color: theme.textSecondary }]}>Sois concis et surtout reste dans le respect de tous !</Text>
+      <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
         <View style={styles.userRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>A</Text>
+          <View style={[styles.avatar, { backgroundColor: theme.emojiButton }]}>
+            <Text style={[styles.avatarText, { color: theme.primary }]}>A</Text>
           </View>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.emojiButton, color: theme.text }]}
             placeholder="Pose ta question..."
+            placeholderTextColor={theme.textSecondary}
             value={sondage}
             maxLength={140}
             onChangeText={setSondage}
           />
         </View>
-        <Text style={styles.counter}>{sondage.length}/140</Text>
+        <Text style={[styles.counter, { color: theme.textSecondary }]}>{sondage.length}/140</Text>
         <View style={styles.choicesRow}>
           <TouchableOpacity
             style={[
@@ -114,7 +117,7 @@ export default function PostPollScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <Text style={styles.sectionTitle}>En partageant mon témoignage,</Text>
+      <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>En partageant mon témoignage,</Text>
       {checkboxLabels.map((label, i) => (
         <TouchableOpacity
           key={i}
@@ -125,10 +128,10 @@ export default function PostPollScreen() {
             setChecks(updated);
           }}
         >
-          <View style={[styles.checkbox, checks[i] && styles.checkboxChecked]}>
+          <View style={[styles.checkbox, checks[i] && { backgroundColor: theme.primary, borderColor: theme.primary }]}>
             {checks[i] && <Text style={styles.checkboxTick}>✓</Text>}
           </View>
-          <Text style={styles.checkboxLabel}>{label}</Text>
+          <Text style={[styles.checkboxLabel, { color: theme.textSecondary }]}>{label}</Text>
         </TouchableOpacity>
       ))}
       <TouchableOpacity
@@ -147,11 +150,10 @@ export default function PostPollScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#FFFBEA', padding: 20 },
-  header: { fontWeight: 'bold', fontSize: 26, marginBottom: 4, color: '#00235B', textAlign: 'center' },
-  subHeader: { color: '#666', marginBottom: 18, fontSize: 15, textAlign: 'center' },
+  screen: { flex: 1, padding: 20 },
+  header: { fontWeight: 'bold', fontSize: 26, marginBottom: 4, textAlign: 'center' },
+  subHeader: { marginBottom: 18, fontSize: 15, textAlign: 'center' },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 18,
     padding: 18,
     marginBottom: 18,
@@ -160,21 +162,19 @@ const styles = StyleSheet.create({
   userRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   avatar: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#ffe6b2', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     marginRight: 12,
   },
-  avatarText: { fontWeight: 'bold', fontSize: 18, color: '#9b6e2c' },
+  avatarText: { fontWeight: 'bold', fontSize: 18 },
   input: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
     borderRadius: 10,
     padding: 12,
     minHeight: 40,
     fontSize: 16,
-    color: '#222',
     textAlignVertical: 'top',
   },
-  counter: { alignSelf: 'flex-end', color: '#bbb', fontSize: 12, marginTop: 2 },
+  counter: { alignSelf: 'flex-end', fontSize: 12, marginTop: 2 },
   choicesRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -183,27 +183,24 @@ const styles = StyleSheet.create({
   },
   choiceBtn: {
     flex: 1,
-    backgroundColor: '#e6f0fa',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
     marginHorizontal: 5,
     borderWidth: 2,
-    borderColor: '#e6f0fa',
   },
   choiceBtnActive: {
     backgroundColor: '#00235B',
     borderColor: '#00235B',
   },
   choiceText: {
-    color: '#00235B',
     fontWeight: 'bold',
     fontSize: 16,
   },
   choiceTextActive: {
     color: '#fff',
   },
-  sectionTitle: { marginVertical: 12, fontWeight: '600', color: '#7595C7' },
+  sectionTitle: { marginVertical: 12, fontWeight: '600' },
   checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   checkbox: {
     width: 20, height: 20, borderRadius: 4,
@@ -212,7 +209,7 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: { backgroundColor: '#7595C7', borderColor: '#7595C7' },
   checkboxTick: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  checkboxLabel: { color: '#7595C7', fontSize: 14, flex: 1 },
+  checkboxLabel: { fontSize: 14, flex: 1 },
   publishButton: {
     backgroundColor: '#00235B', borderRadius: 24, marginTop: 24,
     paddingVertical: 14, alignItems: 'center',

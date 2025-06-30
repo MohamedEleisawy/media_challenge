@@ -1,3 +1,4 @@
+import { useTheme } from '@/components/ui/Theme';
 import { useRouter } from "expo-router";
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import React, { useState } from 'react';
@@ -8,19 +9,21 @@ import { db } from '../firebaseConfig';
 
 // Composant personnalisé pour les cases à cocher avec état
 function Checkbox({ label, checked, onChange }) {
+  const theme = useTheme();
+  
   return (
     <TouchableOpacity style={styles.checkboxContainer} onPress={() => onChange(!checked)}>
-      <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+      <View style={[styles.checkbox, checked && { backgroundColor: theme.primary, borderColor: theme.primary }]}>
         {checked && <Text style={styles.checkboxTick}>✓</Text>}
       </View>
-      <Text style={styles.checkboxLabel}>{label}</Text>
+      <Text style={[styles.checkboxLabel, { color: theme.textSecondary }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
 export default function PostAnecdoteScreen() {
-  // Navigation et gestion d'état
   const router = useRouter();
+  const theme = useTheme();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [checks, setChecks] = useState([false, false, false]); // État des cases à cocher
@@ -103,34 +106,35 @@ export default function PostAnecdoteScreen() {
   ];
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Raconte-nous ton anecdote !</Text>
-      <Text style={styles.subtitle}>Donne le contexte, sois pertinent et surtout : dans le respect !</Text>
+    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Raconte-nous ton anecdote !</Text>
+      <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Donne le contexte, sois pertinent et surtout : dans le respect !</Text>
       
       {/* Carte de saisie avec avatar et compteur de caractères */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
         <View style={styles.row}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
+          <View style={[styles.avatar, { backgroundColor: theme.emojiButton }]}>
+            <Text style={[styles.avatarText, { color: theme.primary }]}>
               {/* Affichage de la première lettre de l'email ou A par défaut */}
               {user?.email ? user.email[0].toUpperCase() : 'A'}
             </Text>
           </View>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.emojiButton, color: theme.text }]}
             multiline
             maxLength={300} // Limitation de caractères
             placeholder="Nouvelle anecdote..."
+            placeholderTextColor={theme.textSecondary}
             value={text}
             onChangeText={setText}
           />
         </View>
         {/* Compteur de caractères en temps réel */}
-        <Text style={styles.counter}>{text.length}/300</Text>
+        <Text style={[styles.counter, { color: theme.textSecondary }]}>{text.length}/300</Text>
       </View>
       
       {/* Section des conditions d'utilisation */}
-      <Text style={styles.sectionTitle}>En partageant mon témoignage,</Text>
+      <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>En partageant mon témoignage,</Text>
       {checkboxLabels.map((label, i) => (
         <Checkbox
           key={i}
@@ -145,7 +149,7 @@ export default function PostAnecdoteScreen() {
       <TouchableOpacity
         style={[
           styles.button,
-          // Désactivation visuelle si conditions non remplies
+          { backgroundColor: theme.primary },
           (loading || !user) && styles.buttonDisabled
         ]}
         onPress={handlePost}
@@ -164,11 +168,10 @@ export default function PostAnecdoteScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  title: { fontWeight: 'bold', fontSize: 22, marginBottom: 4, color: '#222' },
-  subtitle: { color: '#666', marginBottom: 18, fontSize: 14 },
+  screen: { flex: 1, padding: 20 },
+  title: { fontWeight: 'bold', fontSize: 22, marginBottom: 4 },
+  subtitle: { marginBottom: 18, fontSize: 14 },
   card: {
-    backgroundColor: '#fcfcfc',
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
@@ -177,33 +180,31 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   avatar: {
     width: 42, height: 42, borderRadius: 21,
-    backgroundColor: '#ffe6b2', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     marginRight: 10,
   },
-  avatarText: { fontWeight: 'bold', fontSize: 18, color: '#9b6e2c' },
+  avatarText: { fontWeight: 'bold', fontSize: 18 },
   input: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
     borderRadius: 10,
     padding: 12,
     minHeight: 60,
     fontSize: 16,
-    color: '#222',
     textAlignVertical: 'top',
   },
-  counter: { alignSelf: 'flex-end', color: '#bbb', fontSize: 12, marginTop: 2 },
-  sectionTitle: { marginVertical: 12, fontWeight: '600', color: '#7595C7' },
+  counter: { alignSelf: 'flex-end', fontSize: 12, marginTop: 2 },
+  sectionTitle: { marginVertical: 12, fontWeight: '600' },
   checkboxContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   checkbox: {
     width: 20, height: 20, borderRadius: 4,
-    borderWidth: 2, borderColor: '#7595C7',
+    borderWidth: 2,
     backgroundColor: '#fff', marginRight: 8, alignItems: 'center', justifyContent: 'center',
   },
   checkboxChecked: { backgroundColor: '#7595C7', borderColor: '#7595C7' },
   checkboxTick: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  checkboxLabel: { color: '#7595C7', fontSize: 14, flex: 1 },
+  checkboxLabel: { fontSize: 14, flex: 1 },
   button: {
-    backgroundColor: '#222', borderRadius: 24, marginTop: 24,
+    borderRadius: 24, marginTop: 24,
     paddingVertical: 14, alignItems: 'center',
   },
   buttonDisabled: { opacity: 0.7 },

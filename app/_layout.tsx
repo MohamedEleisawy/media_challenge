@@ -1,15 +1,17 @@
-import { Slot } from 'expo-router';
-import { AuthProvider } from '../authContext';
-import { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import SplashScreen from '../components/SplashScreen';
-import Navbar from '../components/Navbar';
-import Toast from 'react-native-toast-message';
-import { useFonts } from 'expo-font';
 import Footer from '@/components/Footer';
+import { useTheme } from '@/components/ui/Theme';
+import { useFonts } from 'expo-font';
+import { Slot } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { AuthProvider } from '../authContext';
+import Navbar from '../components/Navbar';
+import SplashScreen from '../components/SplashScreen';
 
 export default function Layout() {
   const [loading, setLoading] = useState(true);
+  const theme = useTheme();
 
   const [fontsLoaded] = useFonts({
     'Nunito-ExtraBoldItalic': require('../assets/fonts/Nunito-ExtraBoldItalic.ttf'),
@@ -28,9 +30,9 @@ export default function Layout() {
 
   return (
     <AuthProvider>
-      <View style={styles.page}>
+      <View style={[styles.page, { backgroundColor: theme.background }]}>
         <Navbar />
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
           <Slot />
         </ScrollView>
         <Toast />
@@ -43,8 +45,7 @@ export default function Layout() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#fff',
-    position: 'relative', // nécessaire pour le positionnement absolu du footer
+    position: 'relative',
   },
   content: {
     paddingBottom: 120, // assez d'espace pour laisser la place au footer fixé
@@ -74,11 +75,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#00235B',
     paddingTop: 28,
     paddingBottom: 5,
     borderTopWidth: 2,
-    borderTopColor: '#7595C7',
     zIndex: 10,
   },
   aideText: {

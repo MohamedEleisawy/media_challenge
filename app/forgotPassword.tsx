@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
-import Toast from 'react-native-toast-message';
+import { useTheme } from '@/components/ui/Theme';
 import { useRouter } from 'expo-router';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { auth } from '../firebaseConfig';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const router = useRouter();
+  const theme = useTheme();
 
   const handleReset = async () => {
     if (!email) {
@@ -38,16 +40,17 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🔁 Réinitialiser le mot de passe</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>🔁 Réinitialiser le mot de passe</Text>
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor={theme.textSecondary}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
-        style={styles.input}
+        style={[styles.input, { borderColor: theme.border, color: theme.text }]}
       />
 
       <Button title="Envoyer le lien de réinitialisation" onPress={handleReset} />

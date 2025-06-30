@@ -1,18 +1,24 @@
+import { useTheme } from '@/components/ui/Theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, LogBox, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../authContext';
 import { db } from '../firebaseConfig';
 
 export default function ReportsPage() {
   // États pour gérer les signalements et l'interface utilisateur
   const { user, userRole } = useAuth();
+  const theme = useTheme();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+  }, []);
 
   // Vérification des permissions d'accès et chargement initial
   useEffect(() => {
@@ -107,34 +113,35 @@ export default function ReportsPage() {
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.title}>🚨 Signalements</Text>
+      <Text style={[styles.title, { color: theme.primary }]}>🚨 Signalements</Text>
 
       {/* Signalements en attente */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📋 En attente ({pendingReports.length})</Text>
+        <Text style={[styles.sectionTitle, { color: theme.primary }]}>📋 En attente ({pendingReports.length})</Text>
         {pendingReports.length === 0 ? (
-          <Text style={styles.noData}>Aucun signalement en attente.</Text>
+          <Text style={[styles.noData, { color: theme.textSecondary }]}>Aucun signalement en attente.</Text>
         ) : (
           pendingReports.map((report) => (
-            <View key={report.id} style={styles.reportCard}>
+            <View key={report.id} style={[styles.reportCard, { backgroundColor: theme.cardBackground }]}
+            >
               <View style={styles.reportHeader}>
-                <Text style={styles.reportType}>
+                <Text style={[styles.reportType, { color: theme.primary }]}>
                   {report.type === 'poll' ? '📊 Sondage' : '📝 Anecdote'}
                 </Text>
-                <Text style={styles.reportDate}>
+                <Text style={[styles.reportDate, { color: theme.textSecondary }]}>
                   {new Date(report.reportedAt?.seconds * 1000).toLocaleDateString()}
                 </Text>
               </View>
               
-              <Text style={styles.reportAuthor}>Auteur: {report.authorPseudo}</Text>
-              <Text style={styles.reportContent}>{report.contentText}</Text>
+              <Text style={[styles.reportAuthor, { color: theme.textSecondary }]}>Auteur: {report.authorPseudo}</Text>
+              <Text style={[styles.reportContent, { color: theme.text }]}>{report.contentText}</Text>
               
               <View style={styles.actionButtons}>
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.dismissButton]}
+                  style={[styles.actionButton, { backgroundColor: theme.warning }]}
                   onPress={() => handleResolveReport(report.id, 'dismiss')}
                 >
                   <Ionicons name="close-circle" size={20} color="white" />
@@ -142,7 +149,7 @@ export default function ReportsPage() {
                 </TouchableOpacity>
                 
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.deleteButton]}
+                  style={[styles.actionButton, { backgroundColor: theme.error }]}
                   onPress={() => {
                     Alert.alert(
                       'Confirmation',
@@ -165,23 +172,24 @@ export default function ReportsPage() {
 
       {/* Signalements traités */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>✅ Traités ({resolvedReports.length})</Text>
+        <Text style={[styles.sectionTitle, { color: theme.primary }]}>✅ Traités ({resolvedReports.length})</Text>
         {resolvedReports.slice(0, 5).map((report) => (
-          <View key={report.id} style={[styles.reportCard, styles.resolvedCard]}>
+          <View key={report.id} style={[styles.reportCard, styles.resolvedCard, { backgroundColor: theme.cardBackground, opacity: 0.7 }]}
+          >
             <View style={styles.reportHeader}>
-              <Text style={styles.reportType}>
+              <Text style={[styles.reportType, { color: theme.primary }]}>
                 {report.type === 'poll' ? '📊 Sondage' : '📝 Anecdote'}
               </Text>
-              <Text style={styles.reportStatus}>
+              <Text style={[styles.reportStatus, { color: theme.success }]}>
                 {report.status === 'dismissed' ? 'Ignoré' : 'Supprimé'}
               </Text>
             </View>
-            <Text style={styles.reportContent}>{report.contentText}</Text>
+            <Text style={[styles.reportContent, { color: theme.text }]}>{report.contentText}</Text>
           </View>
         ))}
       </View>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.primary }]} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>← Retour</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -189,25 +197,34 @@ export default function ReportsPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20 },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#00235B', textAlign: 'center', marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   section: { marginBottom: 30 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#00235B' },
-  noData: { fontStyle: 'italic', color: '#999', textAlign: 'center', marginVertical: 20 },
-  reportCard: { backgroundColor: '#f9f9f9', padding: 15, marginBottom: 15, borderRadius: 10, borderLeftWidth: 4, borderLeftColor: '#ff6b6b' },
-  resolvedCard: { borderLeftColor: '#51cf66', opacity: 0.7 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
+  noData: { fontStyle: 'italic', textAlign: 'center', marginVertical: 20 },
+  reportCard: { 
+    padding: 15, 
+    marginBottom: 15, 
+    borderRadius: 12, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#ff6b6b',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  resolvedCard: { borderLeftColor: '#51cf66' },
   reportHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  reportType: { fontSize: 16, fontWeight: 'bold', color: '#00235B' },
-  reportDate: { fontSize: 12, color: '#666' },
-  reportStatus: { fontSize: 12, color: '#51cf66', fontWeight: 'bold' },
-  reportAuthor: { fontSize: 14, color: '#666', marginBottom: 5 },
-  reportContent: { fontSize: 16, color: '#333', marginBottom: 15 },
+  reportType: { fontSize: 16, fontWeight: 'bold' },
+  reportDate: { fontSize: 12 },
+  reportStatus: { fontSize: 12, fontWeight: 'bold' },
+  reportAuthor: { fontSize: 14, marginBottom: 5 },
+  reportContent: { fontSize: 16, marginBottom: 15 },
   actionButtons: { flexDirection: 'row', justifyContent: 'space-around' },
   actionButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 6 },
-  dismissButton: { backgroundColor: '#ffa726' },
-  deleteButton: { backgroundColor: '#f44336' },
   actionButtonText: { color: 'white', fontWeight: 'bold', marginLeft: 5 },
-  backButton: { backgroundColor: '#00235B', padding: 15, borderRadius: 8, marginTop: 20, marginBottom: 40 },
+  backButton: { padding: 15, borderRadius: 8, marginTop: 20, marginBottom: 40 },
   backButtonText: { color: 'white', textAlign: 'center', fontSize: 16, fontWeight: 'bold' }
 });

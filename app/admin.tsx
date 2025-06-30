@@ -1,18 +1,23 @@
+import { useTheme } from '@/components/ui/Theme';
 import { useRouter } from 'expo-router';
 import { collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, LogBox, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../authContext';
 import { db } from '../firebaseConfig';
 
 export default function AdminPage() {
   const { user, userRole } = useAuth();
-  // const [userData, setUserData] = useState(null);
+  const theme = useTheme();
   const [users, setUsers] = useState([]);
   const [anecdotes, setAnecdotes] = useState([]);
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+  }, []);
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -94,48 +99,48 @@ export default function AdminPage() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>🔧 Administration</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.primary }]}>🔧 Administration</Text>
       
       {/* Statistiques */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{users.length}</Text>
-          <Text style={styles.statLabel}>Utilisateurs</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.cardBackground }]}>
+          <Text style={[styles.statNumber, { color: theme.primary }]}>{users.length}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Utilisateurs</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{anecdotes.length}</Text>
-          <Text style={styles.statLabel}>Anecdotes</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.cardBackground }]}>
+          <Text style={[styles.statNumber, { color: theme.primary }]}>{anecdotes.length}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Anecdotes</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{polls.length}</Text>
-          <Text style={styles.statLabel}>Sondages</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.cardBackground }]}>
+          <Text style={[styles.statNumber, { color: theme.primary }]}>{polls.length}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Sondages</Text>
         </View>
       </View>
 
       {/* Gestion des utilisateurs */}
-      <Text style={styles.sectionTitle}>👥 Gestion des utilisateurs</Text>
+      <Text style={[styles.sectionTitle, { color: theme.primary }]}>👥 Gestion des utilisateurs</Text>
       {users.map((userItem) => (
-        <View key={userItem.id} style={styles.userCard}>
-          <Text style={styles.userName}>{userItem.pseudo || 'Sans pseudo'}</Text>
-          <Text style={styles.userEmail}>{userItem.email}</Text>
-          <Text style={styles.userRole}>Rôle actuel: {userItem.role || 'user'}</Text>
+        <View key={userItem.id} style={[styles.userCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+          <Text style={[styles.userName, { color: theme.primary }]}>{userItem.pseudo || 'Sans pseudo'}</Text>
+          <Text style={[styles.userEmail, { color: theme.textSecondary }]}>{userItem.email}</Text>
+          <Text style={[styles.userRole, { color: theme.text }]}>Rôle actuel: {userItem.role || 'user'}</Text>
           
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[styles.roleButton, styles.adminBtn]}
+              style={[styles.roleButton, { backgroundColor: theme.error }]}
               onPress={() => changeUserRole(userItem.id, 'admin')}
             >
               <Text style={styles.buttonText}>Admin</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.roleButton, styles.moderatorBtn]}
+              style={[styles.roleButton, { backgroundColor: theme.warning }]}
               onPress={() => changeUserRole(userItem.id, 'moderateur')}
             >
               <Text style={styles.buttonText}>Modérateur</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.roleButton, styles.userBtn]}
+              style={[styles.roleButton, { backgroundColor: theme.success }]}
               onPress={() => changeUserRole(userItem.id, 'user')}
             >
               <Text style={styles.buttonText}>Utilisateur</Text>
@@ -144,7 +149,7 @@ export default function AdminPage() {
         </View>
       ))}
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.primary }]} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>← Retour au profil</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -152,24 +157,41 @@ export default function AdminPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20 },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#00235B', textAlign: 'center', marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   statsContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30 },
-  statCard: { backgroundColor: '#f5f5f5', padding: 15, borderRadius: 10, alignItems: 'center', minWidth: 80 },
-  statNumber: { fontSize: 24, fontWeight: 'bold', color: '#00235B' },
-  statLabel: { fontSize: 12, color: '#666' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 15, color: '#00235B' },
-  userCard: { backgroundColor: '#f9f9f9', padding: 15, marginBottom: 10, borderRadius: 8 },
-  userName: { fontSize: 16, fontWeight: 'bold', color: '#00235B' },
-  userEmail: { fontSize: 14, color: '#666', marginVertical: 2 },
-  userRole: { fontSize: 14, color: '#333', marginBottom: 10 },
+  statCard: { 
+    padding: 15, 
+    borderRadius: 12, 
+    alignItems: 'center', 
+    minWidth: 80,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statNumber: { fontSize: 24, fontWeight: 'bold' },
+  statLabel: { fontSize: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 15 },
+  userCard: { 
+    padding: 15, 
+    marginBottom: 10, 
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  userName: { fontSize: 16, fontWeight: 'bold' },
+  userEmail: { fontSize: 14, marginVertical: 2 },
+  userRole: { fontSize: 14, marginBottom: 10 },
   buttonRow: { flexDirection: 'row', justifyContent: 'space-around' },
   roleButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6, minWidth: 80 },
-  adminBtn: { backgroundColor: '#f44336' },
-  moderatorBtn: { backgroundColor: '#ff9800' },
-  userBtn: { backgroundColor: '#4caf50' },
   buttonText: { color: 'white', fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
-  backButton: { backgroundColor: '#00235B', padding: 15, borderRadius: 8, marginTop: 20, marginBottom: 40 },
+  backButton: { padding: 15, borderRadius: 8, marginTop: 20, marginBottom: 40 },
   backButtonText: { color: 'white', textAlign: 'center', fontSize: 16, fontWeight: 'bold' }
 });

@@ -1,14 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { useTheme } from './ui/Theme';
 
 const HeaderComponent = () => {
+  const theme = useTheme();
+
   return (
     <View style={styles.header}>
       <View style={styles.ligne}>
-        <Text style={styles.headerTextOne}>Ici, </Text>
-        <Text style={styles.headerText}>chaque voix compte.</Text>
+        <Text style={[styles.headerTextOne, { color: theme.text }]}>Ici, </Text>
+        <Text style={[styles.headerText, { color: theme.primary }]}>chaque voix compte.</Text>
       </View>
-      <Text style={styles.subHeaderText}>Partage ton ressenti, ton vécu, ton point de vue.</Text>
+      <Text style={[styles.subHeaderText, { color: theme.textSecondary }]}>Partage ton ressenti, ton vécu, ton point de vue.</Text>
     </View>
   );
 };
@@ -25,16 +28,13 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#202C53',
   },
   headerTextOne: {
     fontSize: 32,
     fontWeight: 'normal',
-    color: '#202C53',
   },
   subHeaderText: {
     fontSize: 16,
-    color: '#666',
   },
 });
 

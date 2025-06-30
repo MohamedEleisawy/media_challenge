@@ -1,3 +1,4 @@
+import { useTheme } from '@/components/ui/Theme';
 import { useFonts } from 'expo-font';
 import { useRouter } from "expo-router";
 import { signOut } from 'firebase/auth';
@@ -7,10 +8,10 @@ import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } fr
 import Toast from 'react-native-root-toast';
 import { useAuth } from '../authContext';
 import { auth, db } from '../firebaseConfig';
-import globalStyles from '../styles/globalStyles';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
+  const theme = useTheme();
   const [userData, setUserData] = useState({
     createdAt: '',
     email: '',
@@ -91,135 +92,145 @@ export default function ProfileScreen() {
 
   if (loading || !fontsLoaded) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color="#00235B" />
-        <Text style={styles.loadingText}>Chargement...</Text>
+        <Text style={[styles.loadingText, { color: theme.text }]}>Chargement...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Image
-        style={styles.avatar}
-        source={userData.avatar ? { uri: userData.avatar } : require('../assets/images/images.png')}
-      />
-      <Text style={styles.pseudo}>{userData.pseudo}</Text>
-      <Text style={styles.infoText}>Date de création: {userData.createdAt}</Text>
-
-      {/* Bouton d'administration conditionnel */}
-      {userData.role === 'admin' && (
-        <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/admin')}>
-          <Text style={globalStyles.preferenceButtonText}>Page d'administration</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Bouton de modérateur conditionnel */}
-      {userData.role === 'moderateur' && (
-        <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/moderator')}>
-          <Text style={globalStyles.preferenceButtonText}>Page de modération</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Section Anecdotes */}
-      <View style={globalStyles.containerButton}>
-        <Text style={globalStyles.TitleBlue}>Mes </Text>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>anecdotes</Text>
-        </View>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Avatar et informations principales */}
+      <View style={styles.profileHeader}>
+        <Image
+          style={styles.avatar}
+          source={userData.avatar ? { uri: userData.avatar } : require('../assets/images/images.png')}
+        />
+        <Text style={[styles.pseudo, { color: theme.text }]}>{userData.pseudo}</Text>
+        <Text style={[styles.infoText, { color: theme.textSecondary }]}>
+          Membre depuis le {userData.createdAt}
+        </Text>
       </View>
 
-      <View style={{ marginTop: 20 }}>
+      {/* Boutons d'administration conditionnels */}
+      {userData.role === 'admin' && (
+        <TouchableOpacity 
+          style={[styles.adminButton, { backgroundColor: theme.error }]} 
+          onPress={() => router.push('/admin')}
+        >
+          <Text style={styles.adminButtonText}>🔧 Administration</Text>
+        </TouchableOpacity>
+      )}
+
+      {userData.role === 'moderateur' && (
+        <TouchableOpacity 
+          style={[styles.moderatorButton, { backgroundColor: theme.warning }]} 
+          onPress={() => router.push('/moderator')}
+        >
+          <Text style={styles.moderatorButtonText}>🛡️ Modération</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Section Mes anecdotes */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Mes </Text>
+          <View style={styles.sectionTitleHighlight}>
+            <Text style={styles.sectionTitleWhite}>anecdotes</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{anecdotes.length}</Text>
+          </View>
+        </View>
+
         {anecdotes.length === 0 ? (
-          <Text style={{ fontStyle: 'italic', color: '#999' }}>Aucune anecdote publiée.</Text>
+          <View style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
+              Aucune anecdote publiée pour le moment
+            </Text>
+          </View>
         ) : (
-          anecdotes.map((anecdote) => (
-            <View key={anecdote.id} style={styles.anecdoteBox}>
-              <Text style={styles.anecdoteText}>{anecdote.text}</Text>
-              <Text style={styles.anecdoteDate}>
-                Publié le {new Date(anecdote.createdAt?.seconds * 1000).toLocaleDateString()}
+          anecdotes.slice(0, 3).map((anecdote) => (
+            <View key={anecdote.id} style={[styles.anecdoteCard, { backgroundColor: theme.anecdoteCard }]}>
+              <Text style={[styles.anecdoteText, { color: theme.text }]} numberOfLines={3}>
+                {anecdote.text}
               </Text>
-              <View style={styles.reactions}>
-                {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
-                  <View key={emoji} style={styles.emojiContainer}>
-                    <View style={styles.emojiDisplay}>
+              <View style={styles.anecdoteFooter}>
+                <Text style={[styles.anecdoteDate, { color: theme.textSecondary }]}>
+                  {new Date(anecdote.createdAt?.seconds * 1000).toLocaleDateString()}
+                </Text>
+                <View style={styles.reactions}>
+                  {['🥰', '😂', '😯', '😢', '😡'].map((emoji) => (
+                    <View key={emoji} style={styles.reactionItem}>
                       <Text style={styles.emoji}>{emoji}</Text>
+                      <Text style={[styles.reactionCount, { color: theme.textSecondary }]}>
+                        {Array.isArray(anecdote.reactions?.[emoji]) ? anecdote.reactions[emoji].length : 0}
+                      </Text>
                     </View>
-                    <Text style={styles.reactionCount}>
-                      {Array.isArray(anecdote.reactions?.[emoji]) ? anecdote.reactions[emoji].length : 0}
-                    </Text>
-                  </View>
-                ))}
+                  ))}
+                </View>
               </View>
             </View>
           ))
         )}
       </View>
 
-      {/* Section Sondages */}
-      <View style={globalStyles.containerButton}>
-        <Text style={globalStyles.TitleBlue}>Mes </Text>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>sondages</Text>
+      {/* Section Mes sondages */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Mes </Text>
+          <View style={styles.sectionTitleHighlight}>
+            <Text style={styles.sectionTitleWhite}>sondages</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{polls.length}</Text>
+          </View>
         </View>
-      </View>
 
-      <View style={{ marginTop: 20 }}>
         {polls.length === 0 ? (
-          <Text style={{ fontStyle: 'italic', color: '#999' }}>Aucun sondage publié.</Text>
+          <View style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
+              Aucun sondage publié pour le moment
+            </Text>
+          </View>
         ) : (
-          polls.map((poll) => {
+          polls.slice(0, 3).map((poll) => {
             const totalVotes = Array.isArray(poll.options)
               ? poll.options.reduce((sum, opt) => sum + opt.votes, 0)
               : 0;
 
             return (
-              <View key={poll.id} style={styles.pollBox}>
-                <Text style={styles.pollQuestion}>{poll.question}</Text>
-                <Text style={styles.pollDate}>
-                  Publié le {new Date(poll.createdAt?.seconds * 1000).toLocaleDateString()}
+              <View key={poll.id} style={[styles.pollCard, { backgroundColor: theme.pollCard }]}>
+                <Text style={[styles.pollQuestion, { color: theme.text }]} numberOfLines={2}>
+                  {poll.question}
                 </Text>
-
-                <View style={styles.pollResults}>
-                  <View style={styles.progressRow}>
-                    {poll.options?.map((option, index) => {
-                      const percent = totalVotes ? Math.round((option.votes / totalVotes) * 100) : 0;
-                      return (
-                        <View
-                          key={option.id}
-                          style={{
-                            flex: percent,
-                            backgroundColor: option.color || (index === 0 ? '#7A91C1' : '#F9C846'),
-                            height: 16,
-                            borderTopLeftRadius: index === 0 ? 8 : 0,
-                            borderBottomLeftRadius: index === 0 ? 8 : 0,
-                            borderTopRightRadius: index === poll.options.length - 1 ? 8 : 0,
-                            borderBottomRightRadius: index === poll.options.length - 1 ? 8 : 0,
-                          }}
-                        />
-                      );
-                    })}
-                  </View>
-                  <View style={styles.optionLabelRow}>
-                    {poll.options?.map((option, index) => {
-                      const percent = totalVotes ? Math.round((option.votes / totalVotes) * 100) : 0;
-                      return (
-                        <View
-                          key={option.id}
-                          style={{
-                            flex: 1,
-                            alignItems: index === 0 ? 'flex-start' : 'flex-end',
-                          }}
-                        >
-                          <Text style={styles.percentageText}>{percent}%</Text>
-                          <Text style={styles.optionLabel}>{option.text}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                  <Text style={styles.totalVotes}>
-                    Total: {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
+                <View style={styles.pollFooter}>
+                  <Text style={[styles.pollDate, { color: theme.textSecondary }]}>
+                    {new Date(poll.createdAt?.seconds * 1000).toLocaleDateString()}
                   </Text>
+                  <View style={styles.pollStats}>
+                    <Text style={[styles.pollVotes, { color: '#00235B' }]}>
+                      {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                </View>
+                {/* Barre de progression simplifiée */}
+                <View style={styles.progressBar}>
+                  {poll.options?.map((option, index) => {
+                    const percent = totalVotes ? (option.votes / totalVotes) * 100 : 0;
+                    return (
+                      <View
+                        key={option.id}
+                        style={{
+                          width: `${percent}%`,
+                          height: 4,
+                          backgroundColor: index === 0 ? '#00235B' : '#7595C7',
+                          borderRadius: 2,
+                        }}
+                      />
+                    );
+                  })}
                 </View>
               </View>
             );
@@ -227,26 +238,45 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Préférences */}
-      <View style={globalStyles.containerButton}>
-        <Text style={globalStyles.TitleBlue}>Mes </Text>
-        <View style={globalStyles.containerButtonBlue}>
-          <Text style={globalStyles.TitleWhite}>préférences</Text>
+      {/* Section Mes préférences */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Mes </Text>
+          <View style={styles.sectionTitleHighlight}>
+            <Text style={styles.sectionTitleWhite}>préférences</Text>
+          </View>
+        </View>
+
+        <View style={styles.preferencesContainer}>
+          <TouchableOpacity 
+            style={[styles.preferenceItem]} 
+            onPress={() => router.push('/confidentialiteModeration')}
+          >
+            <Text style={[styles.preferenceText, { color: theme.text }]}>Confidentialité et modération</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.preferenceItem, { }]} 
+            onPress={() => router.push('/editProfil')}
+          >
+            <Text style={[styles.preferenceText, { color: theme.text }]}>Modifier le compte</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.preferenceItem]} 
+            onPress={() => router.push('/help')}
+          >
+            <Text style={[styles.preferenceText, { color: theme.text }]}>Aide</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.preferenceItem]} 
+            onPress={handleLogout}
+          >
+            <Text style={styles.preferenceText}>Déconnexion</Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/confidentialiteModeration')}>
-        <Text style={globalStyles.preferenceButtonText}>Confidentialité et modération</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/editProfil')}>
-        <Text style={globalStyles.preferenceButtonText}>Modifier le compte</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={globalStyles.preferenceButton} onPress={() => router.push('/help')}>
-        <Text style={globalStyles.preferenceButtonText}>Aide</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={globalStyles.preferenceButton} onPress={handleLogout}>
-        <Text style={globalStyles.preferenceButtonText}>Déconnexion</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -255,127 +285,202 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+  },
+  profileHeader: {
+    alignItems: 'center',
+    marginBottom: 30,
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 20,
+    marginBottom: 15,
     borderWidth: 3,
     borderColor: '#00235B',
-    alignSelf: 'center',
   },
   pseudo: {
-    fontFamily: 'Nunito-Regular',
     fontSize: 24,
-    marginBottom: 7,
-    color: '#00235B',
-    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
   infoText: {
-    fontFamily: 'Nunito-Regular',
-    fontSize: 16,
-    marginBottom: 20,
-    color: '#00235B',
-    textAlign: 'center',
+    fontSize: 14,
+    marginBottom: 10,
   },
-  anecdoteBox: {
+  adminButton: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  adminButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  moderatorButton: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  moderatorButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  section: {
+    marginBottom: 25,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  sectionTitleHighlight: {
+    backgroundColor: '#00235B',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 5,
+  },
+  sectionTitleWhite: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  badge: {
+    backgroundColor: '#7595C7',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  emptyState: {
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  anecdoteCard: {
     padding: 15,
-    backgroundColor: 'rgba(254, 242, 186, 0.34)',
-    borderRadius: 14,
-    shadowColor: '#ccc',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 12,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   anecdoteText: {
-    color: '#333',
-    fontSize: 16,
-    marginBottom: 8,
+    fontSize: 15,
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  anecdoteFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   anecdoteDate: {
     fontSize: 12,
-    color: '#666',
-    marginBottom: 10,
   },
   reactions: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    marginTop: 4,
+    gap: 8,
   },
-  emojiContainer: {
+  reactionItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 8,
-  },
-  emojiDisplay: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 20,
-    backgroundColor: '#E5ECFA',
-    marginBottom: 2,
+    gap: 2,
   },
   emoji: {
-    fontSize: 16,
+    fontSize: 14,
   },
   reactionCount: {
     fontSize: 10,
-    color: '#35518A',
     fontWeight: '500',
   },
-  pollBox: {
-    marginBottom: 15,
+  pollCard: {
     padding: 15,
-    backgroundColor: '#FDF9ED',
-    borderRadius: 14,
+    borderRadius: 12,
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   pollQuestion: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#222',
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  pollFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   pollDate: {
     fontSize: 12,
-    color: '#666',
-    marginBottom: 12,
   },
-  pollResults: {
-    marginTop: 8,
-  },
-  progressRow: {
+  pollStats: {
     flexDirection: 'row',
-    width: '100%',
-    backgroundColor: '#e8e8e8',
-    borderRadius: 8,
-    height: 16,
+    alignItems: 'center',
+  },
+  pollVotes: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  progressBar: {
+    flexDirection: 'row',
+    height: 4,
+    borderRadius: 2,
     overflow: 'hidden',
-    marginBottom: 8,
+    backgroundColor: '#E0E0E0',
   },
-  optionLabelRow: {
+  preferencesContainer: {
+    gap: 8,
+  },
+  preferenceItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
   },
-  percentageText: {
-    fontWeight: '700',
-    color: '#142A63',
-    fontSize: 12,
+  preferenceIcon: {
+    fontSize: 18,
+    marginRight: 12,
   },
-  optionLabel: {
-    color: '#142A63',
-    fontSize: 12,
+  preferenceText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
   },
-  totalVotes: {
-    fontSize: 11,
-    color: '#888',
-    textAlign: 'center',
+  preferenceArrow: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  logoutItem: {
+    backgroundColor: '#7595C7',
+    borderColor: '#7595C7',
+    marginTop: 10,
   },
   loading: {
     flex: 1,
@@ -383,8 +488,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontFamily: 'Nunito-Regular',
     fontSize: 16,
-    color: '#00235B',
+    marginTop: 10,
   },
 });

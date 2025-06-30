@@ -1,7 +1,8 @@
 import AnecdoteCarousel from '@/components/AnecdoteCarousel';
 import HeaderComponent from '@/components/HeaderComponent';
-import PollsCarousel from '@/components/PollsCarousel'; // Import the PollsCarousel component
-import globalStyles from '@/styles/globalStyles';
+import PollsCarousel from '@/components/PollsCarousel';
+import { useTheme } from '@/components/ui/Theme';
+import { useGlobalStyles } from '@/styles/globalStyles';
 import { useRouter } from 'expo-router';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, getDocs, orderBy, query, updateDoc } from 'firebase/firestore';
@@ -11,6 +12,8 @@ import { db } from '../firebaseConfig';
 
 export default function Home() {
   const router = useRouter();
+  const theme = useTheme();
+  const globalStyles = useGlobalStyles();
   
   // États pour gérer les données et l'interface
   const [anecdotes, setAnecdotes] = useState([]);
@@ -120,7 +123,7 @@ export default function Home() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* En-tête de l'application */}
       <HeaderComponent />
       
@@ -173,7 +176,6 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 20,
   },
   center: {

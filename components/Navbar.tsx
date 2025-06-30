@@ -1,26 +1,34 @@
-import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '../authContext';
 import { Ionicons } from '@expo/vector-icons';
+import { Link, useRouter } from 'expo-router';
+import React from 'react';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../authContext';
+import { useIsDarkMode, useTheme } from './ui/Theme';
 
 export default function Navbar() {
   const { user } = useAuth();
   const router = useRouter();
+  const theme = useTheme();
+  const isDarkMode = useIsDarkMode();
 
   return (
-    <View style={styles.nav}>
-      {/* 👇 Logo à la place de "Accueil" */}
+    <View style={[styles.nav, { backgroundColor: theme.navbar }]}>
+      {/* Logo adaptatif selon le mode */}
       <Link href="/" asChild>
         <TouchableOpacity>
           <Image
-            source={require('../assets/images/contrepoint_logo.png')} // Remplace par ton logo
+            source={
+              isDarkMode
+                ? require('../assets/images/contrepointlogoblanc.png')
+                : require('../assets/images/contrepoint_logo.png')
+            }
             style={styles.logo}
             resizeMode="contain"
           />
         </TouchableOpacity>
       </Link>
 
-      {/* 👇 Icône de profil qui redirige vers /login si pas connecté */}
+      {/* Icône profil */}
       <TouchableOpacity
         onPress={() => {
           if (user) {
@@ -30,7 +38,7 @@ export default function Navbar() {
           }
         }}
       >
-        <Ionicons name="person-circle-outline" size={50} color="black" />
+        <Ionicons name="person-circle-outline" size={50} color={theme.text} />
       </TouchableOpacity>
     </View>
   );
@@ -45,11 +53,9 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingVertical: 25,
     paddingHorizontal: 40,
-    backgroundColor: '#ffff',
   },
   logo: {
     width: 130,
     height: 110,
-
   },
 });

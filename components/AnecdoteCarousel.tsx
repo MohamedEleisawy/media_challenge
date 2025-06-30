@@ -1,4 +1,5 @@
-import globalStyles from '@/styles/globalStyles';
+import { useTheme } from '@/components/ui/Theme';
+import { useGlobalStyles } from '@/styles/globalStyles';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { getAuth } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
@@ -16,6 +17,8 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
   const auth = getAuth();
   const user = auth.currentUser;
   const EMOJIS = ['🥰', '😂', '😯', '😢', '😡'];
+  const theme = useTheme();
+  const globalStyles = useGlobalStyles();
 
   useEffect(() => {
     // Mise à jour des anecdotes quand les props changent
@@ -162,14 +165,14 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
     const pseudo = typeof item.pseudo === 'string' ? item.pseudo : 'Inconnu';
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.anecdoteCard }]}>
         <View style={styles.authorRow}>
-          <Text style={styles.author}>👤{pseudo}</Text>
+          <Text style={[styles.author, { color: theme.text }]}>👤{pseudo}</Text>
           <TouchableOpacity onPress={() => handleReport(item)}>
             <Ionicons name="flag" size={20} style={globalStyles.flag}/>
           </TouchableOpacity>
         </View>
-        <Text style={styles.text}>{item.text}</Text>
+        <Text style={[styles.text, { color: theme.text }]}>{item.text}</Text>
         <View style={styles.reactions}>
           {EMOJIS.map((emoji) => (
             <TouchableOpacity
@@ -177,10 +180,10 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
               style={styles.emojiContainer}
               onPress={() => handleEmojiPress(item.id, emoji)}
             >
-              <View style={styles.emojiButton}>
+              <View style={[styles.emojiButton, { backgroundColor: theme.emojiButton }]}>
                 <Text style={styles.emoji}>{emoji}</Text>
               </View>
-              <Text style={styles.reactionCount}>{item.reactions?.[emoji]?.length || 0}</Text>
+              <Text style={[styles.reactionCount, { color: theme.text }]}>{item.reactions?.[emoji]?.length || 0}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -207,26 +210,16 @@ export default function AnecdoteCarousel({ anecdotes: initialAnecdotes }) {
         }}
         contentContainerStyle={{ paddingHorizontal: 0 }}
       />
-      <View style={styles.buttonRow}>
-        <TouchableOpacity onPress={handlePrev} disabled={currentIndex === 0} style={styles.navButton}>
-          <Text style={styles.buttonText}>⬅️</Text>
-        </TouchableOpacity>
-        <Text style={styles.pagination}>{currentIndex + 1}/{anecdotes.length}</Text>
-        <TouchableOpacity onPress={handleNext} disabled={currentIndex === anecdotes.length - 1} style={styles.navButton}>
-          <Text style={styles.buttonText}>➡️</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  carouselContainer: { marginVertical: 20, height: 300 },
+  carouselContainer: { marginVertical: 20, height: 230 },
   card: {
     height: 200,
     width: CARD_WIDTH,
     marginHorizontal: 20,
-    backgroundColor: 'rgba(254, 242, 186)',
     borderRadius: 10,
     padding: 16,
     marginLeft: 18,
@@ -245,7 +238,7 @@ const styles = StyleSheet.create({
   text: { fontSize: 16, marginBottom: 10 },
   reactions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
   emojiContainer: { alignItems: 'center', marginHorizontal: 6 },
-  emojiButton: { padding: 6, borderRadius: 25, backgroundColor: '#7595C7', marginBottom: 2 },
+  emojiButton: { padding: 6, borderRadius: 25, marginBottom: 2 },
   emoji: { fontSize: 16 },
   reactionCount: { fontSize: 10, color: '#000', fontWeight: '500' },
   buttonRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 },

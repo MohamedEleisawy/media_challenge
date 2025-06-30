@@ -151,7 +151,7 @@ export default function PollsPage() {
                 <View style={styles.authorRow}>
                   <Text style={styles.authorIcon}>👤</Text>
                   <TouchableOpacity onPress={() => handleReport(poll)}>
-                    <Ionicons name="flag" size={20} style={styles.flag} />
+                    <Ionicons name="flag" size={25} style={styles.flag} />
                   </TouchableOpacity>
                   <Text style={styles.author}>{poll.pseudo}</Text>
                 </View>

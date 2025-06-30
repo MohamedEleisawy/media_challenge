@@ -1,3 +1,4 @@
+import { useTheme } from '@/components/ui/Theme';
 import { useRouter } from "expo-router";
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import { db } from '../firebaseConfig';
 
 export default function EditProfileScreen() {
   const { user } = useAuth();
+  const theme = useTheme();
   const [userData, setUserData] = useState<{ pseudo: string }>({ pseudo: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,27 +68,28 @@ export default function EditProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Chargement...</Text>
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={[{ color: theme.text }]}>Chargement...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>👤 Modifier le Profil</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>👤 Modifier le Profil</Text>
    
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: theme.border, color: theme.text }]}
         placeholder="Pseudo"
+        placeholderTextColor={theme.textSecondary}
         value={userData.pseudo}
         onChangeText={(text) => setUserData({ ...userData, pseudo: text })}
       />
       <Button
         title={saving ? "Enregistrement..." : "💾 Enregistrer"}
         onPress={handleSave}
-        color="#4CAF50"
+        color={theme.primary}
         disabled={saving}
       />
     </View>
@@ -107,7 +110,6 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,

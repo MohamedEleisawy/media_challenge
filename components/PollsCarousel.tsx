@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { addDoc, collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../components/ui/Theme';
 import { db } from '../firebaseConfig';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -12,6 +13,7 @@ const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
   const [polls, setPolls] = useState(propPolls || []);
   const cardWidth = screenWidth - 64;
   const cardWithMargin = cardWidth + 24; // Include margin in calculation
+  const theme = useTheme();
 
   // Mise à jour des polls quand les props changent
   useEffect(() => {
@@ -146,22 +148,22 @@ const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
           const hasVoted = userId ? poll.voters.includes(userId) : false;
 
           return (
-            <View key={poll.id} style={[styles.pollCard, { width: cardWidth }]}>
+            <View key={poll.id} style={[styles.pollCard, { width: cardWidth, backgroundColor: theme.pollCard }]}>
               <View style={styles.cardHeader}>
                 <View style={styles.authorRow}>
-                  <Text style={styles.authorIcon}>👤</Text>
-                  <Text style={styles.author}>{poll.pseudo}</Text>
+                  <Text style={[styles.authorIcon, { color: theme.text }]}>👤</Text>
+                  <Text style={[styles.author, { color: theme.primary }]}>{poll.pseudo}</Text>
                   <TouchableOpacity onPress={() => handleReport(poll)}>
-                    <Ionicons name="flag" size={20} style={styles.flag} />
+                    <Ionicons name="flag" size={20} style={[styles.flag, { color: theme.primary }]} />
                   </TouchableOpacity>
                 </View>
               </View>
-              <Text style={styles.pollQuestion}>{poll.question}</Text>
+              <Text style={[styles.pollQuestion, { color: theme.text }]}>{poll.question}</Text>
               
               {/* Logique conditionnelle inspirée de polls.tsx */}
               {!userId ? (
                 // Utilisateur non connecté : masquer les résultats
-                <Text style={styles.loginNote}>🔒 Connecte-toi pour voir les résultats et voter.</Text>
+                <Text style={[styles.loginNote, { color: theme.textSecondary }]}>🔒 Connecte-toi pour voir les résultats et voter.</Text>
               ) : hasVoted ? (
                 // Utilisateur connecté qui a déjà voté : afficher les résultats
                 <View style={styles.chartContainer}>
@@ -188,15 +190,9 @@ const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
                     {poll.options.map((option, index) => {
                       const percent = totalVotes ? Math.round((option.votes / totalVotes) * 100) : 0;
                       return (
-                        <View
-                          key={option.id}
-                          style={{
-                            flex: 1,
-                            alignItems: index === 0 ? 'flex-start' : 'flex-end',
-                          }}
-                        >
-                          <Text style={styles.percentageText}>{percent}%</Text>
-                          <Text style={styles.optionLabel}>{option.text}</Text>
+                        <View key={option.id} style={{ flex: 1, alignItems: index === 0 ? 'flex-start' : 'flex-end' }}>
+                          <Text style={[styles.percentageText, { color: theme.primary }]}>{percent}%</Text>
+                          <Text style={[styles.optionLabel, { color: theme.primary }]}>{option.text}</Text>
                         </View>
                       );
                     })}
@@ -208,7 +204,7 @@ const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
                   {poll.options.map((option) => (
                     <TouchableOpacity
                       key={option.id}
-                      style={styles.voteButton}
+                      style={[styles.voteButton, { backgroundColor: theme.buttonPrimary }]}
                       onPress={() => onVote(poll.id, option.id)}
                     >
                       <Text style={styles.voteButtonText}>{option.text}</Text>
@@ -221,41 +217,18 @@ const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
         })}
       </ScrollView>
 
-      {/* Navigation Dots */}
+      {/* Navigation avec thème */}
       <View style={styles.dotsContainer}>
         {polls.map((_, index) => (
           <TouchableOpacity
             key={index}
             style={[
               styles.dot,
-              { backgroundColor: index === currentIndex ? '#4A90E2' : '#E0E0E0' }
+              { backgroundColor: index === currentIndex ? theme.primary : theme.border }
             ]}
             onPress={() => scrollToIndex(index)}
           />
         ))}
-      </View>
-
-      {/* Navigation Buttons */}
-      <View style={styles.navButtons}>
-        <TouchableOpacity onPress={handlePrev} disabled={currentIndex === 0}>
-          <Ionicons 
-            name="arrow-back-circle" 
-            size={32} 
-            color={currentIndex === 0 ? '#ccc' : '#4A90E2'} 
-          />
-        </TouchableOpacity>
-        
-        <Text style={styles.counter}>
-          {currentIndex + 1} / {polls.length}
-        </Text>
-        
-        <TouchableOpacity onPress={handleNext} disabled={currentIndex === polls.length - 1}>
-          <Ionicons 
-            name="arrow-forward-circle" 
-            size={32} 
-            color={currentIndex === polls.length - 1 ? '#ccc' : '#4A90E2'} 
-          />
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -264,19 +237,18 @@ const PollsCarousel = ({ userId, onVote, polls: propPolls }) => {
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 16,
   },
   carousel: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
   },
   pollCard: {
-    backgroundColor: '#FDF9ED',
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
-    marginRight: 24, // Increased from 16 to 24 for better spacing
+    marginRight: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
@@ -284,7 +256,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   authorRow: {
     flexDirection: 'row',
@@ -292,93 +264,91 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   authorIcon: {
-    fontSize: 18,
-    marginRight: 6,
+    fontSize: 16,
+    marginRight: 8,
   },
   author: {
     fontWeight: 'bold',
-    color: '#142A63',
     flex: 1,
+    fontSize: 14,
   },
   pollQuestion: {
     fontSize: 15,
-    color: '#222',
     marginVertical: 8,
     fontWeight: '500',
+    lineHeight: 20,
   },
   chartContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   progressRow: {
     flexDirection: 'row',
     width: '100%',
-    backgroundColor: '#e8e8e8',
-    borderRadius: 12,
-    height: 20,
+    backgroundColor: '#333',
+    borderRadius: 8,
+    height: 16,
     overflow: 'hidden',
-    marginVertical: 10,
+    marginVertical: 8,
   },
   optionLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 6,
+    marginTop: 4,
   },
   percentageText: {
     fontWeight: '700',
-    color: '#142A63',
+    fontSize: 12,
   },
   optionLabel: {
-    color: '#142A63',
+    fontSize: 12,
   },
   voteButtons: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
-    marginTop: 10,
+    marginTop: 12,
   },
   voteButton: {
-    backgroundColor: '#142A63',
-    borderRadius: 8,
+    borderRadius: 20,
     paddingVertical: 8,
-    paddingHorizontal: 18,
-    marginHorizontal: 5,
-    marginTop: 8,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
+    marginTop: 6,
   },
   voteButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 13,
   },
   loginNote: {
-    color: '#888',
     fontStyle: 'italic',
     marginTop: 8,
     textAlign: 'center',
+    fontSize: 13,
   },
   dotsContainer: {
     flexDirection: 'row',
-    marginTop: 16,
-    marginBottom: 12,
+    marginTop: 12,
+    marginBottom: 8,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginHorizontal: 3,
   },
   navButtons: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '60%',
-    marginTop: 8,
+    width: '50%',
+    marginTop: 4,
   },
   counter: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#4A90E2',
   },
   flag: {
-    color: '#35518A',
     marginLeft: 'auto',
   },
 });
